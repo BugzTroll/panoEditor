@@ -16,6 +16,7 @@ find_package(Qt5Widgets CONFIG REQUIRED)
 file(GLOB helloworld_SRCS
     "src/*.h"
     "src/*.cpp"
+    "src/*.ui"
 )
 
 # Tell CMake to create the helloworld executable
