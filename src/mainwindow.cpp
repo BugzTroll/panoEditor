@@ -24,7 +24,7 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::loadButtonEvent(){
-    image = this->loadImage();
+    image = loadImage();
     ui->openGLWidget->display(image);
 }
 
@@ -32,8 +32,6 @@ QImage MainWindow::loadImage() {
     QString fileName = QFileDialog::getOpenFileName(this,
         tr("Open File"), "",
         tr("All Files (*)"));
-
-     qDebug() << "loading image" << fileName;
 
     if (fileName.isEmpty()){
         qDebug() << "Error, image is empty";

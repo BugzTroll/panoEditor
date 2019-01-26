@@ -4,8 +4,6 @@
 #include<QOpenGLWidget>
 #include<QOpenGLContext>
 #include<QOpenGLFunctions>
-#include<QPainter>
-#include<QDebug>
 
 class ImageDisplay : public QOpenGLWidget
 {
@@ -15,10 +13,11 @@ public:
     void paintEvent(QPaintEvent*) override;
     void display(const QImage& img);
     void paintGL() override;
-    QImage resizeImageToFit(const QImage& image);
-
 protected:
     void initializeGL() override;
+private:
+    QImage resizeImageToFit(const QImage& image);
+
 };
 
 #endif // IMAGEDISPLAY_H

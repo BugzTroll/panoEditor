@@ -1,4 +1,6 @@
 #include "imagedisplay.h"
+#include<QPainter>
+#include<QDebug>
 
 void ImageDisplay::initializeGL(){
     QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
@@ -23,19 +25,19 @@ QImage ImageDisplay::resizeImageToFit(const QImage& image){
 }
 
 void ImageDisplay::paintEvent(QPaintEvent*){
+    if (!image.isNull()) {
+        QPainter painter(this);
 
-    qDebug() << "painting";
-    QPainter painter(this);
-    QImage resizedImage = this->resizeImageToFit(image);
+        QImage resizedImage = resizeImageToFit(image);
 
-    //clear color
-    painter.fillRect(this->rect(), Qt::black);
+        //clear color
+        painter.fillRect(rect(), Qt::black);
 
-    //Draw the image in the center
-    QRect rect(resizedImage.rect());
-    QRect devRect(0, 0, painter.device()->width(), painter.device()->height());
-    rect.moveCenter(devRect.center());
+        //Draw the image in the center
+        QRect imgRect(resizedImage.rect());
+        QRect devRect(0, 0, painter.device()->width(), painter.device()->height());
+        imgRect.moveCenter(devRect.center());
 
-    qDebug() << this->rect().width() << this->rect().height();
-    painter.drawImage(rect.topLeft(),resizedImage);
+        painter.drawImage(imgRect.topLeft(),resizedImage);
+    }
 }
