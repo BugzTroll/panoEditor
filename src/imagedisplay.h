@@ -8,7 +8,6 @@
 class ImageDisplay : public QOpenGLWidget
 {
 public:
-    QImage image;
     ImageDisplay(QWidget *parent) : QOpenGLWidget(parent) { }
     void paintEvent(QPaintEvent*) override;
     void display(const QImage& img);
@@ -17,6 +16,7 @@ protected:
     void initializeGL() override;
 private:
     QImage resizeImageToFit(const QImage& image);
+    QImage image;
 
 };
 
