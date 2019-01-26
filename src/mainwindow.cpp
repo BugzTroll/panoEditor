@@ -1,32 +1,21 @@
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
 #include <QDebug>
 #include <QSignalMapper>
-
-#include "window.h"
-#include <QMenuBar>
-#include <QMenu>
 #include <QMessageBox>
 #include <QDebug>
+#include <QFileDialog>
+#include "imagedisplay.h"
+#include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    //ui->setupUi(this);
+    ui->setupUi(this);
 
-//    QObject::connect(ui->myFirstButton, SIGNAL(clicked()),
-//                     this, SLOT(clickingButtonEvent()));
+    QObject::connect(ui->loadButton, SIGNAL(clicked()),
+                     this, SLOT(loadButtonEvent()));
 
-    QMenuBar *menuBar = new QMenuBar;
-    QMenu *menuWindow = menuBar->addMenu(tr("&Window"));
-    QAction *addNew = new QAction(menuWindow);
-    addNew->setText(tr("Add new"));
-    menuWindow->addAction(addNew);
-    connect(addNew, &QAction::triggered, this, &MainWindow::onAddNew);
-    setMenuBar(menuBar);
-
-    onAddNew();
 }
 
 MainWindow::~MainWindow()
@@ -34,17 +23,23 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::clickingButtonEvent(){
-    qDebug() << "clicked";
+void MainWindow::loadButtonEvent(){
+    image = loadImage();
+    ui->openGLWidget->display(image);
 }
 
-void MainWindow::onAddNew()
-{
-    if (!centralWidget())
-        setCentralWidget(new Window(this));
-    else
-        QMessageBox::information(nullptr, tr("Cannot add new window"), tr("Already occupied. Undock first."));
-    qDebug() << "OPEN FILE";
+QImage MainWindow::loadImage() {
+    QString fileName = QFileDialog::getOpenFileName(this,
+        tr("Open File"), "",
+        tr("All Files (*)"));
 
+    if (fileName.isEmpty()){
+        qDebug() << "Error, image is empty";
+        return QImage();
+    }
+    else {
+        QImage image = QImage(fileName);
+        return image;
+    }
 }
 

@@ -12,6 +12,9 @@ set(CMAKE_AUTOUIC ON)
 # Find the QtWidgets library
 find_package(Qt5Widgets CONFIG REQUIRED)
 
+# find include
+include_directories(src)
+
 # Populate a CMake variable with the sources
 file(GLOB helloworld_SRCS
     "src/*.h"

@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QFile>
 
 namespace Ui {
 class MainWindow;
@@ -14,15 +15,15 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    QImage loadImage();
+    QImage image;
 
 public slots:
-    void clickingButtonEvent ();
+    void loadButtonEvent();
 
 private:
     Ui::MainWindow *ui;
 
-private slots:
-    void onAddNew();
 };
 
 #endif // MAINWINDOW_H
