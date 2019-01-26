@@ -9,8 +9,8 @@ void ImageDisplay::paintGL() {
     f->glClear(GL_COLOR_BUFFER_BIT);
 }
 
-void ImageDisplay::display(const QImage& img){
-    image = img;
+void ImageDisplay::display(const QImage& image){
+    this->image = image;
     this->update();
 }
 
