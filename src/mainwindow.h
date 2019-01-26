@@ -15,7 +15,8 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    void loadFile();
+    QImage* loadFile();
+    QImage* image;
 
 public slots:
     void loadButtonEvent();

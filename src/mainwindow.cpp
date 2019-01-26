@@ -24,22 +24,25 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::loadButtonEvent(){
-    qDebug() << "click";
-    loadFile();
+    image = this->loadFile();
+    ui->openGLWidget->resizeImageToFit(*image);
+    ui->openGLWidget->display(*image);
 }
 
-void MainWindow::loadFile() {
+QImage* MainWindow::loadFile() {
     QString fileName = QFileDialog::getOpenFileName(this,
         tr("Open File"), "",
         tr("All Files (*)"));
 
      qDebug() << "loading image" << fileName;
 
-    if (fileName.isEmpty())
-        return;
+    if (fileName.isEmpty()){
+        qDebug() << "Error, image is empty";
+        return new QImage();
+    }
     else {
         QImage *image = new QImage(fileName);
-        ui->openGLWidget->display(*image);
+        return image;
     }
 }
 
