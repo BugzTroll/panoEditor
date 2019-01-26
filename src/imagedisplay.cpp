@@ -14,24 +14,28 @@ void ImageDisplay::display(const QImage& img){
     this->update();
 }
 
-void ImageDisplay::resizeImageToFit(QImage& image){
+QImage ImageDisplay::resizeImageToFit(const QImage& image){
     int viewerWidth = this->rect().width();
     int viewerHeight = this->rect().height();
 
-    image = image.scaled(viewerWidth, viewerHeight,Qt::KeepAspectRatio);
+    QImage scaledImage = image.scaled(viewerWidth, viewerHeight,Qt::KeepAspectRatio);
+    return scaledImage;
 }
 
 void ImageDisplay::paintEvent(QPaintEvent*){
+
+    qDebug() << "painting";
     QPainter painter(this);
+    QImage resizedImage = this->resizeImageToFit(image);
 
     //clear color
     painter.fillRect(this->rect(), Qt::black);
 
     //Draw the image in the center
-    QRect rect(image.rect());
+    QRect rect(resizedImage.rect());
     QRect devRect(0, 0, painter.device()->width(), painter.device()->height());
     rect.moveCenter(devRect.center());
 
     qDebug() << this->rect().width() << this->rect().height();
-    painter.drawImage(rect.topLeft(),image);
+    painter.drawImage(rect.topLeft(),resizedImage);
 }

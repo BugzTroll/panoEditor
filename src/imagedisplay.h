@@ -15,7 +15,7 @@ public:
     void paintEvent(QPaintEvent*) override;
     void display(const QImage& img);
     void paintGL() override;
-    void resizeImageToFit(QImage& image);
+    QImage resizeImageToFit(const QImage& image);
 
 protected:
     void initializeGL() override;
