@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>600</height>
+    <height>606</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -49,14 +49,28 @@
      </layout>
     </item>
     <item>
-     <widget class="ImageDisplay" name="openGLWidget">
-      <property name="minimumSize">
-       <size>
-        <width>500</width>
-        <height>500</height>
-       </size>
-      </property>
-     </widget>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="ImageDisplay" name="openGLWidget">
+        <property name="minimumSize">
+         <size>
+          <width>200</width>
+          <height>200</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="ImageSphereViewer" name="sphereViewer">
+        <property name="minimumSize">
+         <size>
+          <width>200</width>
+          <height>200</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
@@ -76,7 +90,12 @@
   <customwidget>
    <class>ImageDisplay</class>
    <extends>QOpenGLWidget</extends>
-   <header location="global">imagedisplay.h</header>
+   <header>imagedisplay.h</header>
+  </customwidget>
+  <customwidget>
+   <class>ImageSphereViewer</class>
+   <extends>QOpenGLWidget</extends>
+   <header location="global">imagesphereviewer.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

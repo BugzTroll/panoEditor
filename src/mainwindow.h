@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include <QFile>
+#include <QWindow>
+#include <QOpenGLFunctions>
 
 namespace Ui {
 class MainWindow;
@@ -23,6 +25,7 @@ public slots:
 
 private:
     Ui::MainWindow *ui;
+
 
 };
 
