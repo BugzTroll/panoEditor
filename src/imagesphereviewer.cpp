@@ -6,10 +6,11 @@ static const char *vertexShaderSource =
     "attribute lowp vec4 colAttr;\n"
     "varying lowp vec4 col;\n"
     "uniform highp mat4 projectionMatrix;\n"
-    "uniform highp mat4 modelviewMatrix;\n"
+    "uniform highp mat4 modelMatrix;\n"
+    "uniform highp mat4 viewMatrix;\n"
     "void main() {\n"
     "   col = colAttr;\n"
-    "   gl_Position = projectionMatrix * modelviewMatrix * posAttr;\n"
+    "   gl_Position = projectionMatrix * viewMatrix * modelMatrix * posAttr;\n"
     "}\n";
 
 static const char *fragmentShaderSource =
@@ -24,19 +25,22 @@ void ImageSphereViewer::initializeGL(){
     m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
     m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSource);
     m_program->link();
-    m_posAttr = m_program->attributeLocation("posAttr");
-    m_colAttr = m_program->attributeLocation("colAttr");
-    m_projectionMatrixUniform = m_program->uniformLocation("projectionMatrix");
-    m_modelviewMatrixUniform = m_program->uniformLocation("modelviewMatrix");
+    m_posAttr = GLuint(m_program->attributeLocation("posAttr"));
+    m_colAttr = GLuint(m_program->attributeLocation("colAttr"));
+    m_projectionMatrixUniform = GLuint(m_program->uniformLocation("projectionMatrix"));
+    m_viewMatrixUniform = GLuint(m_program->uniformLocation("viewMatrix"));
+    m_modelMatrixUniform = GLuint(m_program->uniformLocation("modelMatrix"));
 
     projectionMatrix = QMatrix4x4();
-    modelviewMatrix = QMatrix4x4();
+    viewMatrix = QMatrix4x4();
+    modelMatrix = QMatrix4x4();
 
     float aspectRatio = float(this->rect().width())/float(this->rect().height());
 
     fov = 60;
-    //projectionMatrix.perspective(60.0f, aspectRatio, 0.1f, 100.0f);
-    modelviewMatrix.translate(0, 0, -8);
+    projectionMatrix.perspective(70.0f, aspectRatio, 0.1f, 100.0f);
+    //modelMatrix.translate(0, 0, -8);
+    modelMatrix.scale(20);
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -50,8 +54,9 @@ void ImageSphereViewer::paintGL() {
 
     //matrix.rotate(100.0f * m_frame / 30, 0, 1, 0);
 
-    m_program->setUniformValue(m_projectionMatrixUniform, projectionMatrix);
-    m_program->setUniformValue(m_modelviewMatrixUniform, modelviewMatrix);
+    m_program->setUniformValue(GLint(m_projectionMatrixUniform), projectionMatrix);
+    m_program->setUniformValue(GLint(m_viewMatrixUniform), viewMatrix);
+    m_program->setUniformValue(GLint(m_modelMatrixUniform), modelMatrix);
 
     std::vector<std::vector<GLfloat>> cubeData = generateCube();
 
@@ -82,16 +87,43 @@ void ImageSphereViewer::mouseReleaseEvent(QMouseEvent* event){
 }
 
 void ImageSphereViewer::mouseMoveEvent(QMouseEvent* event){
+//    int angleY = 0;
+//    int angleX = 0;
+//    double mouseX = event->screenPos().x();
+//    double mouseY = event->screenPos().y();
+//    double diffX = initMouseX - mouseX;
+//    double diffY = initMouseY - mouseY;
+//    angleY += -diffX*2;
+//    angleX += diffY*2;
+
+//    QVector3D y(0,1,0);
+//    QVector3D x(1,0,0);
+
+//    modelMatrix.rotate(angleY, y.x(), y.y(), y.z());
+//    //viewMatrix.rotate(angleY, x.x(), x.y(), x.z());
+
+//    initMouseX = mouseX;
+//    initMouseY = mouseY;
+
     int angleY = 0;
     int angleX = 0;
     double mouseX = event->screenPos().x();
     double mouseY = event->screenPos().y();
     double diffX = initMouseX - mouseX;
     double diffY = initMouseY - mouseY;
-    angleY += -diffX*2;
-    angleX += diffY*2;
+    angleY += -diffX;
+    angleX += diffY;
 
-    modelviewMatrix.rotate(angleY, 0.0, 1.0, 0.0);
+    QVector3D y(0,1,0);
+    QVector3D x(1,0,0);
+
+    QVector4D newY = y * viewMatrix;
+    QVector4D newX = x * viewMatrix;
+
+
+    //viewMatrix.setToIdentity();
+    viewMatrix.rotate(-angleY, newY.x(), newY.y(), newY.z());
+    viewMatrix.rotate(angleX, newX.x(), newX.y(), newX.z());
 
     initMouseX = mouseX;
     initMouseY = mouseY;
@@ -100,7 +132,7 @@ void ImageSphereViewer::mouseMoveEvent(QMouseEvent* event){
 void ImageSphereViewer::resizeGL(int w, int h){
       float aspect = float(w)/float(h);
       projectionMatrix.setToIdentity();
-      projectionMatrix.perspective(60.0f, aspect, 0.1f, 100.0f);
+      projectionMatrix.perspective(70.0f, aspect, 0.1f, 100.0f);
 }
 
 std::vector<std::vector<GLfloat>> ImageSphereViewer::generateCube(){
@@ -148,36 +180,36 @@ std::vector<std::vector<GLfloat>> ImageSphereViewer::generateCube(){
     cubeData.push_back(g_vertex_buffer_data);
 
     std::vector<GLfloat> g_color_buffer_data = {
-        0.583f,  0.771f,  0.014f,
-        0.609f,  0.115f,  0.436f,
-        0.327f,  0.483f,  0.844f,
-        0.822f,  0.569f,  0.201f,
-        0.435f,  0.602f,  0.223f,
-        0.310f,  0.747f,  0.185f,
-        0.597f,  0.770f,  0.761f,
-        0.559f,  0.436f,  0.730f,
-        0.359f,  0.583f,  0.152f,
-        0.483f,  0.596f,  0.789f,
-        0.559f,  0.861f,  0.639f,
-        0.195f,  0.548f,  0.859f,
-        0.014f,  0.184f,  0.576f,
-        0.771f,  0.328f,  0.970f,
-        0.406f,  0.615f,  0.116f,
-        0.676f,  0.977f,  0.133f,
-        0.971f,  0.572f,  0.833f,
-        0.140f,  0.616f,  0.489f,
-        0.997f,  0.513f,  0.064f,
-        0.945f,  0.719f,  0.592f,
-        0.543f,  0.021f,  0.978f,
-        0.279f,  0.317f,  0.505f,
-        0.167f,  0.620f,  0.077f,
-        0.347f,  0.857f,  0.137f,
-        0.055f,  0.953f,  0.042f,
-        0.714f,  0.505f,  0.345f,
-        0.783f,  0.290f,  0.734f,
-        0.722f,  0.645f,  0.174f,
-        0.302f,  0.455f,  0.848f,
-        0.225f,  0.587f,  0.040f,
+        0.0f,  1.0f,  0.0f,
+        0.0f,  1.0f,  0.0f,
+        0.0f,  1.0f,  0.0f,
+        0.0f,  1.0f,  0.0f,
+        0.0f,  1.0f,  0.0f,
+        0.0f,  1.0f,  0.0f,
+        0.0f,  0.0f,  1.0f,
+        0.0f,  0.0f,  1.0f,
+        0.0f,  0.0f,  1.0f,
+        0.0f,  0.5f,  1.0f,
+        0.0f,  0.5f,  1.0f,
+        0.0f,  0.5f,  1.0f,
+        1.0f,  0.0f,  0.0f,
+        1.0f,  0.0f,  0.0f,
+        1.0f,  0.0f,  0.0f,
+        1.0f,  0.0f,  0.0f,
+        1.0f,  0.0f,  0.0f,
+        1.0f,  0.0f,  0.0f,
+        1.0f,  1.0f,  1.0f,
+        1.0f,  1.0f,  1.0f,
+        1.0f,  1.0f,  1.0f,
+        1.0f,  1.0f,  1.0f,
+        1.0f,  1.0f,  1.0f,
+        1.0f,  1.0f,  1.0f,
+        0.0f,  1.0f,  1.0f,
+        0.0f,  1.0f,  1.0f,
+        0.0f,  1.0f,  1.0f,
+        0.0f,  1.0f,  1.0f,
+        0.0f,  1.0f,  1.0f,
+        0.0f,  1.0f,  1.0f,
         0.517f,  0.713f,  0.338f,
         0.053f,  0.959f,  0.120f,
         0.393f,  0.621f,  0.362f,
