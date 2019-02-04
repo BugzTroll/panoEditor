@@ -6,6 +6,7 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QMouseEvent>
+#include <QOpenGLTexture>
 #include <vector>
 
 class ImageSphereViewer : public QOpenGLWidget, protected QOpenGLFunctions
@@ -13,6 +14,8 @@ class ImageSphereViewer : public QOpenGLWidget, protected QOpenGLFunctions
 public:
     ImageSphereViewer(QWidget *parent) : QOpenGLWidget(parent) { }
     void paintGL() override;
+    void setTexture(QOpenGLTexture *texture);
+
 protected:
     void initializeGL() override;
 private:
@@ -34,8 +37,11 @@ private:
     void resizeGL (int w, int h) override;
     std::vector<std::vector<GLfloat>> generateCube();
 
+    void testShader(std::vector<GLfloat> points);
+
     QOpenGLShaderProgram *m_program;
     int m_frame;
+    QOpenGLTexture *texture;
 };
 
 #endif // IMAGESPHEREVIEWER_H

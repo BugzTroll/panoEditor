@@ -25,6 +25,8 @@ MainWindow::~MainWindow()
 
 void MainWindow::loadButtonEvent(){
     image = loadImage();
+    texture = new QOpenGLTexture(image);
+    ui->sphereViewer->setTexture(texture);
     ui->openGLWidget->display(image);
 }
 

@@ -5,6 +5,7 @@
 #include <QFile>
 #include <QWindow>
 #include <QOpenGLFunctions>
+#include <QOpenGLTexture>
 
 namespace Ui {
 class MainWindow;
@@ -19,7 +20,7 @@ public:
     ~MainWindow();
     QImage loadImage();
     QImage image;
-
+    QOpenGLTexture *texture;
 public slots:
     void loadButtonEvent();
 
