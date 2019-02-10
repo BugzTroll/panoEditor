@@ -46,7 +46,6 @@ static const char *fragmentShaderProjection =
     "   float y = 1.0f / PI;\n"
     "   vec2 rads = vec2(x, y);\n"
     "   vec2 sphereCoords = vec2(lon, lat) * rads;\n"
-    "   gl_FragColor = vec4(r, 0.0f, 0.0f, 1.0f);\n"
     "   gl_FragColor = texture2D(texture, sphereCoords);\n"
     "}\n";
 
@@ -68,9 +67,8 @@ void ImageSphereViewer::initializeGL(){
 
     float aspectRatio = float(this->rect().width())/float(this->rect().height());
 
-    fov = 60;
-    projectionMatrix.perspective(60.0f, aspectRatio, 0.1f, 100.0f);
-    //modelMatrix.translate(0, 0, -8);
+    fov = 60.0f;
+    projectionMatrix.perspective(fov, aspectRatio, 0.1f, 100.0f);
     modelMatrix.scale(20);
 
     glEnable(GL_DEPTH_TEST);
@@ -117,19 +115,12 @@ void ImageSphereViewer::paintGL() {
          glViewport(0, 0, width(), height());
          m_program->bind();
 
-        //matrix.rotate(100.0f * m_frame / 30, 0, 1, 0);
-
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
         m_program->setUniformValue(GLint(m_projectionMatrixUniform), projectionMatrix);
         m_program->setUniformValue(GLint(m_viewMatrixUniform), viewMatrix);
         m_program->setUniformValue(GLint(m_modelMatrixUniform), modelMatrix);
         texture->bind();
 
         std::vector<std::vector<GLfloat>> cubeData = generateCube();
-
-        testShader(cubeData[0]);
 
         glVertexAttribPointer(m_posAttr, 3, GL_FLOAT, GL_FALSE, 0, cubeData[0].data());
         //glVertexAttribPointer(m_colAttr, 3, GL_FLOAT, GL_FALSE, 0, cubeData[1].data());
@@ -159,22 +150,24 @@ void ImageSphereViewer::mouseReleaseEvent(QMouseEvent* event){
 }
 
 void ImageSphereViewer::mouseMoveEvent(QMouseEvent* event){
-    int angleY = 0;
-    int angleX = 0;
-    double mouseX = event->screenPos().x();
-    double mouseY = event->screenPos().y();
-    double diffX = initMouseX - mouseX;
-    double diffY = initMouseY - mouseY;
-    angleY += -diffX;
-    angleX += diffY/3;
+    float mouseX = float(event->screenPos().x());
+    float mouseY = float(event->screenPos().y());
+    float diffX = initMouseX - mouseX;
+    float diffY = initMouseY - mouseY;
+
+    float width = float(this->rect().width());
+    float height = float(this->rect().height());
+
+    float fovV = fov / width * height;
+
+    float angleY = diffX/width * fov;
+    float angleX = diffY/height * fovV;
 
     QVector3D y(0,1,0);
     QVector3D x(1,0,0);
 
-    QVector4D newY = y * viewMatrix;
+    viewMatrix.rotate(angleY, y.x(), y.y(), y.z());
     QVector4D newX = x * viewMatrix;
-
-    viewMatrix.rotate(-angleY, newY.x(), newY.y(), newY.z());
     viewMatrix.rotate(angleX, newX.x(), newX.y(), newX.z());
 
     initMouseX = mouseX;
@@ -184,7 +177,7 @@ void ImageSphereViewer::mouseMoveEvent(QMouseEvent* event){
 void ImageSphereViewer::resizeGL(int w, int h){
       float aspect = float(w)/float(h);
       projectionMatrix.setToIdentity();
-      projectionMatrix.perspective(60.0f, aspect, 0.1f, 100.0f);
+      projectionMatrix.perspective(fov, aspect, 0.1f, 100.0f);
 }
 
 std::vector<std::vector<GLfloat>> ImageSphereViewer::generateCube(){

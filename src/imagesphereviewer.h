@@ -25,8 +25,8 @@ private:
     GLuint m_projectionMatrixUniform;
     GLuint m_viewMatrixUniform;
     GLuint m_modelMatrixUniform;
-    double initMouseX;
-    double initMouseY;
+    float initMouseX;
+    float initMouseY;
     QMatrix4x4 projectionMatrix;
     QMatrix4x4 viewMatrix;
     QMatrix4x4 modelMatrix;
