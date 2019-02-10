@@ -21,7 +21,6 @@ protected:
 private:
     QImage image;
     GLuint m_posAttr;
-    GLuint m_colAttr;
     GLuint m_projectionMatrixUniform;
     GLuint m_viewMatrixUniform;
     GLuint m_modelMatrixUniform;
@@ -31,17 +30,16 @@ private:
     QMatrix4x4 viewMatrix;
     QMatrix4x4 modelMatrix;
     float fov;
+    QOpenGLShaderProgram *m_program;
+    int m_frame;
+    QOpenGLTexture *texture;
+
     void mousePressEvent (QMouseEvent* event) override;
     void mouseReleaseEvent (QMouseEvent* event) override;
     void mouseMoveEvent (QMouseEvent* event) override;
     void resizeGL (int w, int h) override;
     std::vector<std::vector<GLfloat>> generateCube();
-
     void testShader(std::vector<GLfloat> points);
-
-    QOpenGLShaderProgram *m_program;
-    int m_frame;
-    QOpenGLTexture *texture;
 };
 
 #endif // IMAGESPHEREVIEWER_H

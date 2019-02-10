@@ -2,18 +2,6 @@
 #include "math.h"
 #include <QVector3D>
 
-static const char *vertexShaderSourceOld =
-    "attribute highp vec4 posAttr;\n"
-    "attribute lowp vec4 colAttr;\n"
-    "varying lowp vec4 col;\n"
-    "uniform highp mat4 projectionMatrix;\n"
-    "uniform highp mat4 modelMatrix;\n"
-    "uniform highp mat4 viewMatrix;\n"
-    "void main() {\n"
-    "   col = colAttr;\n"
-    "   gl_Position = projectionMatrix * viewMatrix * modelMatrix * posAttr;\n"
-    "}\n";
-
 static const char *vertexShaderSource =
     "attribute highp vec4 posAttr;\n"
     "uniform highp mat4 projectionMatrix;\n"
@@ -26,7 +14,7 @@ static const char *vertexShaderSource =
     "  gl_Position = projectionMatrix * viewMatrix * modelMatrix * posAttr;\n"
     "}\n";
 
-static const char *fragmentShaderSource =
+static const char *fragmentShaderColor =
     "varying lowp vec4 col;\n"
     "void main() {\n"
     "   gl_FragColor = col;\n"
@@ -56,7 +44,6 @@ void ImageSphereViewer::initializeGL(){
     m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderProjection);
     m_program->link();
     m_posAttr = GLuint(m_program->attributeLocation("posAttr"));
-    //m_colAttr = GLuint(m_program->attributeLocation("colAttr"));
     m_projectionMatrixUniform = GLuint(m_program->uniformLocation("projectionMatrix"));
     m_viewMatrixUniform = GLuint(m_program->uniformLocation("viewMatrix"));
     m_modelMatrixUniform = GLuint(m_program->uniformLocation("modelMatrix"));
@@ -82,7 +69,7 @@ void ImageSphereViewer::setTexture(QOpenGLTexture *tex){
 
 void ImageSphereViewer::testShader(std::vector<GLfloat> points){
 
-    for (int i = 0; i < points.size(); i+=3){
+    for (size_t i = 0; i < points.size(); i+=3){
         float px = points[i];
         float py = points[i+1];
         float pz = points[i+2];
@@ -94,7 +81,7 @@ void ImageSphereViewer::testShader(std::vector<GLfloat> points){
         float lat = asin(v.y());
 
         float textCoordX = (lon + M_PI) / (2.0 * M_PI);
-        float textCoordY = lat / M_PI;
+        float textCoordY = float(lat / float(M_PI));
         qDebug() << px << ", " << py <<", "<< pz;
         qDebug() << v.x() << ", " << v.y() <<", "<< v.z();
         qDebug() << "lon lat " << lon << " " << lat;
@@ -111,9 +98,12 @@ void ImageSphereViewer::paintGL() {
 
     if(texture) {
 
-         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-         glViewport(0, 0, width(), height());
-         m_program->bind();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glViewport(0, 0, width(), height());
+        m_program->bind();
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
         m_program->setUniformValue(GLint(m_projectionMatrixUniform), projectionMatrix);
         m_program->setUniformValue(GLint(m_viewMatrixUniform), viewMatrix);
@@ -123,7 +113,6 @@ void ImageSphereViewer::paintGL() {
         std::vector<std::vector<GLfloat>> cubeData = generateCube();
 
         glVertexAttribPointer(m_posAttr, 3, GL_FLOAT, GL_FALSE, 0, cubeData[0].data());
-        //glVertexAttribPointer(m_colAttr, 3, GL_FLOAT, GL_FALSE, 0, cubeData[1].data());
 
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
@@ -142,8 +131,8 @@ void ImageSphereViewer::paintGL() {
 }
 
 void ImageSphereViewer::mousePressEvent(QMouseEvent* event){
-    initMouseX = event->screenPos().x();
-    initMouseY = event->screenPos().y();
+    initMouseX = float(event->screenPos().x());
+    initMouseY = float(event->screenPos().y());
 }
 
 void ImageSphereViewer::mouseReleaseEvent(QMouseEvent* event){
