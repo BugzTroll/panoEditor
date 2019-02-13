@@ -66,33 +66,6 @@ void ImageSphereViewer::setTexture(QOpenGLTexture *tex)
     texture = tex;
 }
 
-void ImageSphereViewer::testShader(std::vector<GLfloat> points)
-{
-    for (size_t i = 0; i < points.size(); i+=3){
-        float px = points[i];
-        float py = points[i+1];
-        float pz = points[i+2];
-
-        QVector3D v(px, py, pz);
-        v = v.normalized();
-
-        float lon = atan2(v.x(), v.z());
-        float lat = asin(v.y());
-
-        float textCoordX = (lon + M_PI) / (2.0 * M_PI);
-        float textCoordY = float(lat / float(M_PI));
-        qDebug() << px << ", " << py <<", "<< pz;
-        qDebug() << v.x() << ", " << v.y() <<", "<< v.z();
-        qDebug() << "lon lat " << lon << " " << lat;
-        qDebug() << textCoordX << "," << textCoordY;
-
-        Q_ASSERT(textCoordX < 0);
-        Q_ASSERT(textCoordX > 1);
-        Q_ASSERT(textCoordY < 0);
-        Q_ASSERT(textCoordY > 1);
-    }
-}
-
 void ImageSphereViewer::paintGL()
 {
     if(texture) {
@@ -109,12 +82,12 @@ void ImageSphereViewer::paintGL()
         m_program.setUniformValue(GLint(m_modelMatrixUniform), modelMatrix);
         texture->bind();
 
-        glVertexAttribPointer(m_posAttr, 3, GL_FLOAT, GL_FALSE, 0, cubeData[0].data());
+        glVertexAttribPointer(m_posAttr, 3, GL_FLOAT, GL_FALSE, 0, cubeData.data());
 
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
 
-        glDrawArrays(GL_TRIANGLES, 0, cubeData[0].size());
+        glDrawArrays(GL_TRIANGLES, 0, cubeData.size());
 
         glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(0);
@@ -170,9 +143,8 @@ void ImageSphereViewer::resizeGL(int w, int h)
       projectionMatrix.perspective(fov, aspect, 0.1f, 100.0f);
 }
 
-std::vector<std::vector<GLfloat>> ImageSphereViewer::generateCube(){
+std::vector<GLfloat> ImageSphereViewer::generateCube(){
 
-    std::vector<std::vector<GLfloat>> cubeData;
     std::vector<GLfloat> g_vertex_buffer_data = {
         -1.0f,-1.0f,-1.0f,
         -1.0f,-1.0f, 1.0f,
@@ -212,48 +184,5 @@ std::vector<std::vector<GLfloat>> ImageSphereViewer::generateCube(){
         1.0f,-1.0f, 1.0f
     };
 
-    cubeData.push_back(g_vertex_buffer_data);
-
-    std::vector<GLfloat> g_color_buffer_data = {
-        0.0f,  1.0f,  0.0f,
-        0.0f,  1.0f,  0.0f,
-        0.0f,  1.0f,  0.0f,
-        0.0f,  1.0f,  0.0f,
-        0.0f,  1.0f,  0.0f,
-        0.0f,  1.0f,  0.0f,
-        0.0f,  0.0f,  1.0f,
-        0.0f,  0.0f,  1.0f,
-        0.0f,  0.0f,  1.0f,
-        0.0f,  0.5f,  1.0f,
-        0.0f,  0.5f,  1.0f,
-        0.0f,  0.5f,  1.0f,
-        1.0f,  0.0f,  0.0f,
-        1.0f,  0.0f,  0.0f,
-        1.0f,  0.0f,  0.0f,
-        1.0f,  0.0f,  0.0f,
-        1.0f,  0.0f,  0.0f,
-        1.0f,  0.0f,  0.0f,
-        1.0f,  1.0f,  1.0f,
-        1.0f,  1.0f,  1.0f,
-        1.0f,  1.0f,  1.0f,
-        1.0f,  1.0f,  1.0f,
-        1.0f,  1.0f,  1.0f,
-        1.0f,  1.0f,  1.0f,
-        0.0f,  1.0f,  1.0f,
-        0.0f,  1.0f,  1.0f,
-        0.0f,  1.0f,  1.0f,
-        0.0f,  1.0f,  1.0f,
-        0.0f,  1.0f,  1.0f,
-        0.0f,  1.0f,  1.0f,
-        0.517f,  0.713f,  0.338f,
-        0.053f,  0.959f,  0.120f,
-        0.393f,  0.621f,  0.362f,
-        0.673f,  0.211f,  0.457f,
-        0.820f,  0.883f,  0.371f,
-        0.982f,  0.099f,  0.879f
-    };
-
-     cubeData.push_back(g_color_buffer_data);
-
-     return cubeData;
+     return g_vertex_buffer_data;
 }

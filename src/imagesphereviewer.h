@@ -34,13 +34,13 @@ private:
     QOpenGLShaderProgram m_program;
     int m_frame;
     QOpenGLTexture *texture;
-    std::vector<std::vector<GLfloat>> cubeData;
+    std::vector<GLfloat> cubeData;
 
     void mousePressEvent (QMouseEvent* event) override;
     void mouseReleaseEvent (QMouseEvent* event) override;
     void mouseMoveEvent (QMouseEvent* event) override;
     void resizeGL (int w, int h) override;
-    std::vector<std::vector<GLfloat>> generateCube();
+    std::vector<GLfloat> generateCube();
     void testShader(std::vector<GLfloat> points);
 };
 
