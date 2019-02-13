@@ -12,7 +12,8 @@
 class ImageSphereViewer : public QOpenGLWidget, protected QOpenGLFunctions
 {
 public:
-    ImageSphereViewer(QWidget *parent) : QOpenGLWidget(parent) { }
+    explicit ImageSphereViewer(QWidget *parent);
+   // ~ImageSphereViewer();
     void paintGL() override;
     void setTexture(QOpenGLTexture *texture);
 
@@ -30,9 +31,10 @@ private:
     QMatrix4x4 viewMatrix;
     QMatrix4x4 modelMatrix;
     float fov;
-    QOpenGLShaderProgram *m_program;
+    QOpenGLShaderProgram m_program;
     int m_frame;
     QOpenGLTexture *texture;
+    std::vector<std::vector<GLfloat>> cubeData;
 
     void mousePressEvent (QMouseEvent* event) override;
     void mouseReleaseEvent (QMouseEvent* event) override;

@@ -9,13 +9,12 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    texture(QOpenGLTexture::Target2D)
 {
     ui->setupUi(this);
-
     QObject::connect(ui->loadButton, SIGNAL(clicked()),
                      this, SLOT(loadButtonEvent()));
-
 }
 
 MainWindow::~MainWindow()
@@ -23,14 +22,16 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::loadButtonEvent(){
+void MainWindow::loadButtonEvent()
+{
     image = loadImage();
-    texture = new QOpenGLTexture(image);
-    ui->sphereViewer->setTexture(texture);
+    texture.setData(image);
+    ui->sphereViewer->setTexture(&texture);
     ui->openGLWidget->display(image);
 }
 
-QImage MainWindow::loadImage() {
+QImage MainWindow::loadImage()
+{
     QString fileName = QFileDialog::getOpenFileName(this,
         tr("Open File"), "",
         tr("All Files (*)"));

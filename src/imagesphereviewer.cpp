@@ -14,12 +14,6 @@ static const char *vertexShaderSource =
     "  gl_Position = projectionMatrix * viewMatrix * modelMatrix * posAttr;\n"
     "}\n";
 
-static const char *fragmentShaderColor =
-    "varying lowp vec4 col;\n"
-    "void main() {\n"
-    "   gl_FragColor = col;\n"
-    "}\n";
-
 static const char *fragmentShaderProjection =
     "#define PI 3.1415926535897932384626433832795\n"
     "#define PIDIV 1.57\n"
@@ -37,38 +31,43 @@ static const char *fragmentShaderProjection =
     "   gl_FragColor = texture2D(texture, sphereCoords);\n"
     "}\n";
 
-void ImageSphereViewer::initializeGL(){
-    initializeOpenGLFunctions();
-    m_program = new QOpenGLShaderProgram(this);
-    m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
-    m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderProjection);
-    m_program->link();
-    m_posAttr = GLuint(m_program->attributeLocation("posAttr"));
-    m_projectionMatrixUniform = GLuint(m_program->uniformLocation("projectionMatrix"));
-    m_viewMatrixUniform = GLuint(m_program->uniformLocation("viewMatrix"));
-    m_modelMatrixUniform = GLuint(m_program->uniformLocation("modelMatrix"));
+ImageSphereViewer::ImageSphereViewer(QWidget *parent) :
+    QOpenGLWidget(parent),
+    m_program(this),
+    projectionMatrix(),
+    viewMatrix(),
+    modelMatrix(),
+    texture(nullptr) {}
 
-    projectionMatrix = QMatrix4x4();
-    viewMatrix = QMatrix4x4();
-    modelMatrix = QMatrix4x4();
+void ImageSphereViewer::initializeGL()
+{
+    initializeOpenGLFunctions();
+    m_program.addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
+    m_program.addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderProjection);
+    m_program.link();
+
+    m_posAttr = GLuint(m_program.attributeLocation("posAttr"));
+    m_projectionMatrixUniform = GLuint(m_program.uniformLocation("projectionMatrix"));
+    m_viewMatrixUniform = GLuint(m_program.uniformLocation("viewMatrix"));
+    m_modelMatrixUniform = GLuint(m_program.uniformLocation("modelMatrix"));
 
     float aspectRatio = float(this->rect().width())/float(this->rect().height());
 
     fov = 60.0f;
     projectionMatrix.perspective(fov, aspectRatio, 0.1f, 100.0f);
-    modelMatrix.scale(20);
+    cubeData = generateCube();
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    texture = nullptr;
 }
 
-void ImageSphereViewer::setTexture(QOpenGLTexture *tex){
+void ImageSphereViewer::setTexture(QOpenGLTexture *tex)
+{
     texture = tex;
 }
 
-void ImageSphereViewer::testShader(std::vector<GLfloat> points){
-
+void ImageSphereViewer::testShader(std::vector<GLfloat> points)
+{
     for (size_t i = 0; i < points.size(); i+=3){
         float px = points[i];
         float py = points[i+1];
@@ -94,35 +93,33 @@ void ImageSphereViewer::testShader(std::vector<GLfloat> points){
     }
 }
 
-void ImageSphereViewer::paintGL() {
-
+void ImageSphereViewer::paintGL()
+{
     if(texture) {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, width(), height());
-        m_program->bind();
+        m_program.bind();
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-        m_program->setUniformValue(GLint(m_projectionMatrixUniform), projectionMatrix);
-        m_program->setUniformValue(GLint(m_viewMatrixUniform), viewMatrix);
-        m_program->setUniformValue(GLint(m_modelMatrixUniform), modelMatrix);
+        m_program.setUniformValue(GLint(m_projectionMatrixUniform), projectionMatrix);
+        m_program.setUniformValue(GLint(m_viewMatrixUniform), viewMatrix);
+        m_program.setUniformValue(GLint(m_modelMatrixUniform), modelMatrix);
         texture->bind();
-
-        std::vector<std::vector<GLfloat>> cubeData = generateCube();
 
         glVertexAttribPointer(m_posAttr, 3, GL_FLOAT, GL_FALSE, 0, cubeData[0].data());
 
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
 
-        glDrawArrays(GL_TRIANGLES, 0, 3*12);
+        glDrawArrays(GL_TRIANGLES, 0, cubeData[0].size());
 
         glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(0);
 
-        m_program->release();
+        m_program.release();
 
         ++m_frame;
     }
@@ -130,15 +127,18 @@ void ImageSphereViewer::paintGL() {
     update();
 }
 
-void ImageSphereViewer::mousePressEvent(QMouseEvent* event){
+void ImageSphereViewer::mousePressEvent(QMouseEvent* event)
+{
     initMouseX = float(event->screenPos().x());
     initMouseY = float(event->screenPos().y());
 }
 
-void ImageSphereViewer::mouseReleaseEvent(QMouseEvent* event){
+void ImageSphereViewer::mouseReleaseEvent(QMouseEvent* event)
+{
 }
 
-void ImageSphereViewer::mouseMoveEvent(QMouseEvent* event){
+void ImageSphereViewer::mouseMoveEvent(QMouseEvent* event)
+{
     float mouseX = float(event->screenPos().x());
     float mouseY = float(event->screenPos().y());
     float diffX = initMouseX - mouseX;
@@ -163,7 +163,8 @@ void ImageSphereViewer::mouseMoveEvent(QMouseEvent* event){
     initMouseY = mouseY;
 }
 
-void ImageSphereViewer::resizeGL(int w, int h){
+void ImageSphereViewer::resizeGL(int w, int h)
+{
       float aspect = float(w)/float(h);
       projectionMatrix.setToIdentity();
       projectionMatrix.perspective(fov, aspect, 0.1f, 100.0f);

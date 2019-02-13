@@ -20,7 +20,7 @@ public:
     ~MainWindow();
     QImage loadImage();
     QImage image;
-    QOpenGLTexture *texture;
+    QOpenGLTexture texture;
 public slots:
     void loadButtonEvent();
 

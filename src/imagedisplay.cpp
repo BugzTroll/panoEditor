@@ -2,21 +2,25 @@
 #include<QPainter>
 #include<QDebug>
 
-void ImageDisplay::initializeGL(){
+void ImageDisplay::initializeGL()
+{
     QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
     f->glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 }
-void ImageDisplay::paintGL() {
+void ImageDisplay::paintGL()
+{
     QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
     f->glClear(GL_COLOR_BUFFER_BIT);
 }
 
-void ImageDisplay::display(const QImage& image){
+void ImageDisplay::display(const QImage& image)
+{
     this->image = image;
     this->update();
 }
 
-QImage ImageDisplay::resizeImageToFit(const QImage& image){
+QImage ImageDisplay::resizeImageToFit(const QImage& image)
+{
     int viewerWidth = this->rect().width();
     int viewerHeight = this->rect().height();
 
@@ -24,7 +28,8 @@ QImage ImageDisplay::resizeImageToFit(const QImage& image){
     return scaledImage;
 }
 
-void ImageDisplay::paintEvent(QPaintEvent*){
+void ImageDisplay::paintEvent(QPaintEvent*)
+{
     if (!image.isNull()) {
         QPainter painter(this);
 
