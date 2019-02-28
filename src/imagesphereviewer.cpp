@@ -112,12 +112,11 @@ void ImageSphereViewer::mouseReleaseEvent(QMouseEvent* event)
 }
 
 void ImageSphereViewer::wheelEvent(QWheelEvent *event){
-    qDebug() << event->angleDelta().ry();
     float mouseWheelAngle = event->angleDelta().ry();
     if( mouseWheelAngle >= lastMouseWheelAngle ){
-        fov = fmax(minFov, fov-10);
+        fov = fmax(minFov, fov - 10);
     } else {
-        fov = fmin(maxFov, fov+10);
+        fov = fmin(maxFov, fov + 10);
     }
 
     float aspect = float( this->rect().width() )/float(this->rect().height());
