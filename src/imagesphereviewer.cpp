@@ -37,7 +37,8 @@ ImageSphereViewer::ImageSphereViewer(QWidget *parent) :
     projectionMatrix(),
     viewMatrix(),
     modelMatrix(),
-    texture(nullptr) {}
+    texture(nullptr),
+    lastMouseWheelAngle(0){}
 
 void ImageSphereViewer::initializeGL()
 {
@@ -108,6 +109,20 @@ void ImageSphereViewer::mousePressEvent(QMouseEvent* event)
 
 void ImageSphereViewer::mouseReleaseEvent(QMouseEvent* event)
 {
+}
+
+void ImageSphereViewer::wheelEvent(QWheelEvent *event){
+    qDebug() << event->angleDelta().ry();
+    float mouseWheelAngle = event->angleDelta().ry();
+    if( mouseWheelAngle >= lastMouseWheelAngle ){
+        fov = fmax(minFov, fov-10);
+    } else {
+        fov = fmin(maxFov, fov+10);
+    }
+
+    float aspect = float( this->rect().width() )/float(this->rect().height());
+    projectionMatrix.setToIdentity();
+    projectionMatrix.perspective(fov, aspect, 0.1f, 100.0f);
 }
 
 void ImageSphereViewer::mouseMoveEvent(QMouseEvent* event)

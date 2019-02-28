@@ -35,10 +35,14 @@ private:
     int m_frame;
     QOpenGLTexture *texture;
     std::vector<GLfloat> cubeData;
+    float const maxFov = 130;
+    float const minFov = 30;
+    float lastMouseWheelAngle;
 
     void mousePressEvent (QMouseEvent* event) override;
     void mouseReleaseEvent (QMouseEvent* event) override;
     void mouseMoveEvent (QMouseEvent* event) override;
+    void wheelEvent(QWheelEvent *event) override;
     void resizeGL (int w, int h) override;
     std::vector<GLfloat> generateCube();
     void testShader(std::vector<GLfloat> points);
