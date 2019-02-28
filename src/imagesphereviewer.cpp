@@ -1,6 +1,7 @@
 #include "imagesphereviewer.h"
 #include "math.h"
 #include <QVector3D>
+#include <QtDebug>
 
 static const char *vertexShaderSource =
     "attribute highp vec4 posAttr;\n"
@@ -99,6 +100,10 @@ void ImageSphereViewer::paintGL()
     }
 
     update();
+}
+
+void ImageSphereViewer::rotatePanorama(int value, std::string axis){
+    qDebug() << "rotate pliz";
 }
 
 void ImageSphereViewer::mousePressEvent(QMouseEvent* event)

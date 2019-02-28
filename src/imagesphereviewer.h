@@ -46,6 +46,9 @@ private:
     void resizeGL (int w, int h) override;
     std::vector<GLfloat> generateCube();
     void testShader(std::vector<GLfloat> points);
+
+public:
+    void rotatePanorama(int value, std::string axis);
 };
 
 #endif // IMAGESPHEREVIEWER_H

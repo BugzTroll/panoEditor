@@ -23,11 +23,11 @@ public:
     QOpenGLTexture texture;
 public slots:
     void loadButtonEvent();
+    void horizontalSliderMovedEvent(int value);
+    void verticalSliderMovedEvent(int value);
 
 private:
     Ui::MainWindow *ui;
-
-
 };
 
 #endif // MAINWINDOW_H

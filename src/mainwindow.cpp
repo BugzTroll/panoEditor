@@ -15,6 +15,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     QObject::connect(ui->loadButton, SIGNAL(clicked()),
                      this, SLOT(loadButtonEvent()));
+
+    QObject::connect(ui->horizontalSlider, SIGNAL(sliderMoved(int)),
+                     this, SLOT(horizontalSliderMovedEvent(int)));
+
+    QObject::connect(ui->verticalSlider, SIGNAL(sliderMoved(int)),
+                     this, SLOT(verticalSliderMovedEvent(int)));
 }
 
 MainWindow::~MainWindow()
@@ -28,6 +34,16 @@ void MainWindow::loadButtonEvent()
     texture.setData(image);
     ui->sphereViewer->setTexture(&texture);
     ui->openGLWidget->display(image);
+}
+
+void MainWindow::horizontalSliderMovedEvent(int value){
+    qDebug() << value;
+     ui->sphereViewer->rotatePanorama(value, "y");
+}
+
+void MainWindow::verticalSliderMovedEvent(int value){
+    qDebug() << value;
+    ui->sphereViewer->rotatePanorama(value, "x");
 }
 
 QImage MainWindow::loadImage()
