@@ -4,8 +4,10 @@
 #include <QMainWindow>
 #include <QFile>
 #include <QWindow>
+#include <QVector3D>
 #include <QOpenGLFunctions>
 #include <QOpenGLTexture>
+#include <QMatrix4x4>
 
 namespace Ui {
 class MainWindow;
@@ -25,6 +27,10 @@ public slots:
     void loadButtonEvent();
     void horizontalSliderMovedEvent(int value);
     void verticalSliderMovedEvent(int value);
+    void verticalSliderReleasedEvent();
+    void horizontalSliderReleasedEvent();
+    QImage rotatePanoramicImage(QImage image, QVector3D axis, float angle);
+    QMatrix4x4 getRotationMatrixFromV(QVector3D axis, float angle);
 
 private:
     Ui::MainWindow *ui;
