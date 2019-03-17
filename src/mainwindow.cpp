@@ -36,14 +36,30 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    ui->sphereViewer->makeCurrent();
+    texture.destroy();
     delete ui;
 }
 
 void MainWindow::loadButtonEvent()
 {
     image = loadImage();
+    //image = image.convertToFormat(QImage::Format_ARGB32);
+    qDebug() << image.format();
+    //texture.create();
+//    texture.setSize(image.width(), image.height());
+//    texture.setFormat(QOpenGLTexture::RGBA32F);
+//    texture.allocateStorage();
+//    texture.setMinMagFilters(QOpenGLTexture::Linear, QOpenGLTexture::Linear);
+
+    // given some `width`, `height` and `data_ptr`
+    //texture.setSize(image.width(), image.height(), 1);
+    //texture.setFormat(QOpenGLTexture::RGBA32F);
+    //texture.allocateStorage();
+//    texture.setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, image.data_ptr());
     texture.setData(image);
-    ui->sphereViewer->setTexture(&texture);
+    qDebug() << texture.format();
+    ui->sphereViewer->setTexture(&texture, image);
     ui->openGLWidget->display(image);
 }
 
@@ -64,7 +80,8 @@ void MainWindow::verticalSliderReleasedEvent(){
     qDebug() << "released";
     qDebug() << ui->verticalSlider->value();
     float theta = (ui->verticalSlider->value() * 2 * M_PI) / 100.0;
-    rotatePanoramicImage(image, v, theta);
+    //rotatePanoramicImage(image, v, theta);
+    ui->sphereViewer->rotateImageTest();
 }
 
 void MainWindow::horizontalSliderReleasedEvent(){
@@ -73,6 +90,7 @@ void MainWindow::horizontalSliderReleasedEvent(){
     qDebug() << ui->horizontalSlider->value();
     float theta = (ui->horizontalSlider->value() * 2 * M_PI) / 100.0;
     rotatePanoramicImage(image, v, theta);
+
 }
 
 QImage MainWindow::loadImage()
@@ -121,8 +139,6 @@ QImage MainWindow::rotatePanoramicImage(QImage image, QVector3D axis, float angl
     QImage imageCopy = image.copy();
     float imageWidth = imageCopy.width();
     float imageHeight = imageCopy.height();
-//    float imageWidth = 5;
-//    float imageHeight = 5;
     QMatrix4x4 rotationM = getRotationMatrixFromV(axis, angle);
 
     for (float y = 0; y < imageHeight; y++) {

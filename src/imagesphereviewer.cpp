@@ -2,6 +2,8 @@
 #include "math.h"
 #include <QVector3D>
 #include <QtDebug>
+#include <stdio.h>
+#include <stdlib.h>
 
 static const char *vertexShaderSource =
     "attribute highp vec4 posAttr;\n"
@@ -32,6 +34,33 @@ static const char *fragmentShaderProjection =
     "   gl_FragColor = texture2D(texture, sphereCoords);\n"
     "}\n";
 
+static const char *computeShader =
+    "  #version 430\n "
+    "  layout(local_size_x = 1, local_size_y = 1) in;\n"
+    "  layout(rgba32f, binding = 0) uniform image2D img_output;\n"
+    "  layout(rgba32f, binding = 1) uniform image2D texture;\n"
+    "  void main() {\n"
+    "   ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);\n"
+    "   vec4 texColor = imageLoad(texture, pixel_coords);\n"
+    "   imageStore(img_output, pixel_coords, texColor);\n"
+    "  }\n";
+
+struct floatPixel {
+  float r = 1.0;
+  float g = 0.0;
+  float b = 0.0;
+  float a = 1.0;
+  floatPixel(float red, float green, float blue, float alpha) :
+    r(red), g(green), b(blue), a(alpha)
+  {
+  }
+  floatPixel()
+  {
+  }
+};
+
+//static floatPixel redImage[262144];
+
 ImageSphereViewer::ImageSphereViewer(QWidget *parent) :
     QOpenGLWidget(parent),
     m_program(this),
@@ -41,17 +70,34 @@ ImageSphereViewer::ImageSphereViewer(QWidget *parent) :
     texture(nullptr),
     lastMouseWheelAngle(0){}
 
+ImageSphereViewer::~ImageSphereViewer(){
+}
+
+void ImageSphereViewer::rotateImageTest(){
+//    qDebug() << "testing compute";
+//    GLuint frame = 1;
+//    glUseProgram(computeHandle);
+//    texture->bind();
+//    glUniform1f(glGetUniformLocation(computeHandle, "roll"), (float)frame*0.01f);
+//    glDispatchCompute(512/16, 512/16, 1); // 512^2 threads in blocks of 16^2
+//    //checkErrors("Dispatch compute shader");
+}
+
 void ImageSphereViewer::initializeGL()
 {
     initializeOpenGLFunctions();
     m_program.addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
     m_program.addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderProjection);
+    m_program_compute.addShaderFromSourceCode(QOpenGLShader::Compute, computeShader);
     m_program.link();
+    m_program_compute.link();
 
     m_posAttr = GLuint(m_program.attributeLocation("posAttr"));
     m_projectionMatrixUniform = GLuint(m_program.uniformLocation("projectionMatrix"));
     m_viewMatrixUniform = GLuint(m_program.uniformLocation("viewMatrix"));
     m_modelMatrixUniform = GLuint(m_program.uniformLocation("modelMatrix"));
+
+    m_frameUniform = GLuint(m_program_compute.uniformLocation("roll"));
 
     float aspectRatio = float(this->rect().width())/float(this->rect().height());
 
@@ -63,15 +109,57 @@ void ImageSphereViewer::initializeGL()
     glDepthFunc(GL_LESS);
 }
 
-void ImageSphereViewer::setTexture(QOpenGLTexture *tex)
+void ImageSphereViewer::setTexture(QOpenGLTexture *tex, QImage image)
 {
     texture = tex;
+
+    //create the read texture
+    int tex_w = image.width(), tex_h = image.height();
+    glGenTextures(1, &tex_input);
+    glBindTexture(GL_TEXTURE_2D, tex_input);
+
+    //create the imageData array manually because the shader needs float
+    std::vector<floatPixel> imageData;
+    for (int y = 0; y < tex_h; y++) {
+      QRgb *rowData = (QRgb*)image.scanLine(y);
+      for (int x = 0; x < tex_w; x++) {
+        QRgb color = rowData[x];
+        int red = qRed(color);
+        int green = qGreen(color);
+        int blue = qBlue(color);
+        floatPixel p(static_cast<float>(red) / 255.0, static_cast<float>(green) / 255.0, static_cast<float>(blue) / 255.0, 1.0);
+        imageData.push_back(p);
+      }
+    }
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, imageData.data());
+
+    //create the write texture
+    glGenTextures(1, &tex_output);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, tex_output);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT,NULL);
+    glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 }
 
-void ImageSphereViewer::paintGL()
-{
+void ImageSphereViewer::paintGL() {
+
+
     if(texture) {
 
+        //bind the compute shader
+        glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+        glBindImageTexture(1, tex_input, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+        m_program_compute.bind();
+        int tex_w = 512, tex_h = 512;
+        glDispatchCompute((GLuint)texture->width(), (GLuint)texture->height(), 1);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+        //bind the vertex and fragment shader
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, width(), height());
         m_program.bind();
@@ -82,7 +170,7 @@ void ImageSphereViewer::paintGL()
         m_program.setUniformValue(GLint(m_projectionMatrixUniform), projectionMatrix);
         m_program.setUniformValue(GLint(m_viewMatrixUniform), viewMatrix);
         m_program.setUniformValue(GLint(m_modelMatrixUniform), modelMatrix);
-        texture->bind();
+        glBindTexture(GL_TEXTURE_2D, tex_output);
 
         glVertexAttribPointer(m_posAttr, 3, GL_FLOAT, GL_FALSE, 0, cubeData.data());
 

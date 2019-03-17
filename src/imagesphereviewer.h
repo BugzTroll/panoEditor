@@ -8,14 +8,15 @@
 #include <QMouseEvent>
 #include <QOpenGLTexture>
 #include <vector>
+#include <QOpenGLExtraFunctions>
 
-class ImageSphereViewer : public QOpenGLWidget, protected QOpenGLFunctions
+class ImageSphereViewer : public QOpenGLWidget, protected QOpenGLExtraFunctions
 {
 public:
     explicit ImageSphereViewer(QWidget *parent);
-   // ~ImageSphereViewer();
+    ~ImageSphereViewer();
     void paintGL() override;
-    void setTexture(QOpenGLTexture *texture);
+    void setTexture(QOpenGLTexture *texture, QImage image);
 
 protected:
     void initializeGL() override;
@@ -25,6 +26,10 @@ private:
     GLuint m_projectionMatrixUniform;
     GLuint m_viewMatrixUniform;
     GLuint m_modelMatrixUniform;
+    GLuint m_frameUniform;
+    GLuint computeHandle;
+    GLuint tex_output;
+    GLuint tex_input;
     float initMouseX;
     float initMouseY;
     QMatrix4x4 projectionMatrix;
@@ -32,6 +37,7 @@ private:
     QMatrix4x4 modelMatrix;
     float fov;
     QOpenGLShaderProgram m_program;
+    QOpenGLShaderProgram m_program_compute;
     int m_frame;
     QOpenGLTexture *texture;
     std::vector<GLfloat> cubeData;
@@ -49,6 +55,8 @@ private:
 
 public:
     void rotatePanorama(int value, std::string axis);
+    GLuint genComputeProg();
+    void rotateImageTest();
 };
 
 #endif // IMAGESPHEREVIEWER_H
