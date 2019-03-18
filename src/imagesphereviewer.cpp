@@ -34,15 +34,75 @@ static const char *fragmentShaderProjection =
     "   gl_FragColor = texture2D(texture, sphereCoords);\n"
     "}\n";
 
+//float centeredX = 2 * (x + 0.5) / imageWidth - 1;
+//float centeredY = 2 * (y + 0.5) / imageHeight - 1;
+//
+//float lat = 0.5 * M_PI * centeredY;
+//float lon = M_PI * centeredX;
+//
+//float XSphere = cos(lat) * cos(lon);
+//float YSphere = cos(lat) * sin(lon);
+//float ZSphere = sin(lat);
+//
+//QVector4D point(XSphere, YSphere, ZSphere, 1);
+//QVector4D rotatedPoint = rotationM * point;
+//
+//float D = sqrt(rotatedPoint.x() * rotatedPoint.x() + rotatedPoint.y() * rotatedPoint.y());
+//float newLat = atan2(rotatedPoint.z(), D);
+//float newLng = atan2(rotatedPoint.y(), rotatedPoint.x());
+//
+//float newX = newLng / M_PI;
+//float newY = newLat / (M_PI * 0.5);
+//
+//int imgCoordX = (round(((0.5 * (newX + 1)) * imageWidth) - 0.5));
+//int imgCoordY = round(((0.5 * (newY + 1)) * imageHeight) - 0.5);
+//
+//imgCoordX = qMax(0, imgCoordX);
+//imgCoordY = qMax(0, imgCoordY);
+//
+//imgCoordX = qMin(static_cast<int>(imageWidth), imgCoordX);
+//imgCoordY = qMin(static_cast<int>(imageHeight), imgCoordY);
+
 static const char *computeShader =
     "  #version 430\n "
+    "  #define PI 3.1415926535897932384626433832795\n"
+    "  uniform float angle;\n"
+    "  uniform highp mat4 rotationMatrix;\n"
     "  layout(local_size_x = 1, local_size_y = 1) in;\n"
     "  layout(rgba32f, binding = 0) uniform image2D img_output;\n"
     "  layout(rgba32f, binding = 1) uniform image2D texture;\n"
     "  void main() {\n"
-    "   ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);\n"
-    "   vec4 texColor = imageLoad(texture, pixel_coords);\n"
-    "   imageStore(img_output, pixel_coords, texColor);\n"
+    "     ivec2 imgSize = imageSize(texture);\n"
+    "     float x = float(gl_GlobalInvocationID.x);\n"
+    "     float y = float(gl_GlobalInvocationID.y);\n"
+    "     float width = float(imgSize.x);\n"
+    "     float height = float(imgSize.y);\n"
+    "     float centeredX = 2.0 * (x + 0.5) / width - 1.0;\n"
+    "     float centeredY = 2.0 * (y + 0.5) / height - 1.0;\n"
+    "     float lat = 0.5 * PI * centeredY;\n" 
+    "     float lon = PI * centeredX;\n"
+    "     float XSphere = cos(lat) * cos(lon);\n"
+    "     float YSphere = cos(lat) * sin(lon);\n"
+    "     float ZSphere = sin(lat);\n"
+    "     vec4 rotatedPoint = vec4(XSphere, YSphere, ZSphere, 1.0);\n"
+    //"  vec4 rotatedPoint = rotationMatrix * point;\n"
+    "     float D = sqrt(rotatedPoint.x * rotatedPoint.x + rotatedPoint.y * rotatedPoint.y);\n"
+    "     float newLat = atan(rotatedPoint.z, D);\n"
+    "     float newLng = atan(rotatedPoint.y, rotatedPoint.x);\n"
+    "     float newX = newLng / PI;\n"
+    "     float newY = newLat / (PI * 0.5);\n"
+    "     float imgCoordX = round(((0.5 * ( newX + 1.0 )) * width) - 0.5);\n"
+    "     float imgCoordY = round(((0.5 * ( newY + 1.0 )) * height) - 0.5);\n"
+    "     imgCoordX = min(imgSize.x - 1.0, max(0.0, imgCoordX));\n"
+    "     imgCoordY = min(imgSize.y - 1.0, max(0.0, imgCoordY));\n"
+    "     int i_imgCoordX = int(imgCoordX);\n"
+    "     int i_imgCoordY = int(imgCoordY);\n"
+    "     vec4 rotatedColor = imageLoad(texture, ivec2(i_imgCoordX , i_imgCoordY));\n"
+
+    ""
+    "     ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);\n"
+    "     vec4 texColor = imageLoad(texture, pixel_coords);\n"
+    "     imageStore(img_output, pixel_coords, rotatedColor);\n"
     "  }\n";
 
 struct floatPixel {
@@ -59,8 +119,6 @@ struct floatPixel {
   }
 };
 
-//static floatPixel redImage[262144];
-
 ImageSphereViewer::ImageSphereViewer(QWidget *parent) :
     QOpenGLWidget(parent),
     m_program(this),
@@ -73,14 +131,46 @@ ImageSphereViewer::ImageSphereViewer(QWidget *parent) :
 ImageSphereViewer::~ImageSphereViewer(){
 }
 
-void ImageSphereViewer::rotateImageTest(){
-//    qDebug() << "testing compute";
-//    GLuint frame = 1;
-//    glUseProgram(computeHandle);
-//    texture->bind();
-//    glUniform1f(glGetUniformLocation(computeHandle, "roll"), (float)frame*0.01f);
-//    glDispatchCompute(512/16, 512/16, 1); // 512^2 threads in blocks of 16^2
-//    //checkErrors("Dispatch compute shader");
+QMatrix4x4 ImageSphereViewer::getRotationMatrixFromV(QVector3D axis, float angle)
+{
+  float a = cos(angle / 2.0);
+  float b = -axis.x() * sin(angle / 2.0);
+  float c = -axis.y() * sin(angle / 2.0);
+  float d = -axis.z() * sin(angle / 2.0);
+  float aa = a * a;
+  float bb = b * b;
+  float cc = c * c;
+  float dd = d * d;
+  float bc = b * c;
+  float ad = a * d;
+  float ac = a * c;
+  float ab = a * b;
+  float bd = b * d;
+  float cd = c * d;
+
+  return QMatrix4x4(aa + bb - cc - dd, 2 * (bc + ad), 2 * (bd - ac), 0,
+    2 * (bc - ad), aa + cc - bb - dd, 2 * (cd + ab), 0,
+    2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc, 0,
+    0, 0, 0, 1);
+
+}
+
+void ImageSphereViewer::rotateImage(QVector3D axis, float angle){
+
+  qDebug() << "Rotating";
+
+   QMatrix4x4 rotationMatrix = getRotationMatrixFromV(axis, angle);
+   rotationMatrix.setToIdentity();
+
+   //bind the variables in the shader
+   m_program_compute.setUniformValue(GLint(m_angleUniform), angle);
+   m_program_compute.setUniformValue(GLint(m_rotationMatrixUniform), rotationMatrix);
+
+   glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+   glBindImageTexture(1, tex_input, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+   m_program_compute.bind();
+   glDispatchCompute((GLuint)texture->width(), (GLuint)texture->height(), 1);
+   glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
 
 void ImageSphereViewer::initializeGL()
@@ -97,7 +187,8 @@ void ImageSphereViewer::initializeGL()
     m_viewMatrixUniform = GLuint(m_program.uniformLocation("viewMatrix"));
     m_modelMatrixUniform = GLuint(m_program.uniformLocation("modelMatrix"));
 
-    m_frameUniform = GLuint(m_program_compute.uniformLocation("roll"));
+    m_angleUniform = GLuint(m_program_compute.uniformLocation("angle"));
+    m_rotationMatrixUniform = GLuint(m_program_compute.uniformLocation("rotationMatrix"));
 
     float aspectRatio = float(this->rect().width())/float(this->rect().height());
 
@@ -151,13 +242,13 @@ void ImageSphereViewer::paintGL() {
 
     if(texture) {
 
-        //bind the compute shader
-        glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-        glBindImageTexture(1, tex_input, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-        m_program_compute.bind();
-        int tex_w = 512, tex_h = 512;
-        glDispatchCompute((GLuint)texture->width(), (GLuint)texture->height(), 1);
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+        ////bind the compute shader
+        //glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+        //glBindImageTexture(1, tex_input, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+        //m_program_compute.bind();
+        //int tex_w = 512, tex_h = 512;
+        //glDispatchCompute((GLuint)texture->width(), (GLuint)texture->height(), 1);
+        //glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
         //bind the vertex and fragment shader
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

@@ -27,6 +27,8 @@ private:
     GLuint m_viewMatrixUniform;
     GLuint m_modelMatrixUniform;
     GLuint m_frameUniform;
+    GLuint m_angleUniform;
+    GLuint m_rotationMatrixUniform;
     GLuint computeHandle;
     GLuint tex_output;
     GLuint tex_input;
@@ -51,12 +53,13 @@ private:
     void wheelEvent(QWheelEvent *event) override;
     void resizeGL (int w, int h) override;
     std::vector<GLfloat> generateCube();
-    void testShader(std::vector<GLfloat> points);
+    void testShadertestShader(std::vector<GLfloat> points);
 
 public:
     void rotatePanorama(int value, std::string axis);
     GLuint genComputeProg();
-    void rotateImageTest();
+    void rotateImage(QVector3D axis, float angle);
+    QMatrix4x4 getRotationMatrixFromV(QVector3D axis, float angle);
 };
 
 #endif // IMAGESPHEREVIEWER_H

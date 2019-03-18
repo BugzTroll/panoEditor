@@ -44,69 +44,65 @@ MainWindow::~MainWindow()
 void MainWindow::loadButtonEvent()
 {
     image = loadImage();
-    //image = image.convertToFormat(QImage::Format_ARGB32);
-    qDebug() << image.format();
-    //texture.create();
-//    texture.setSize(image.width(), image.height());
-//    texture.setFormat(QOpenGLTexture::RGBA32F);
-//    texture.allocateStorage();
-//    texture.setMinMagFilters(QOpenGLTexture::Linear, QOpenGLTexture::Linear);
-
-    // given some `width`, `height` and `data_ptr`
-    //texture.setSize(image.width(), image.height(), 1);
-    //texture.setFormat(QOpenGLTexture::RGBA32F);
-    //texture.allocateStorage();
-//    texture.setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, image.data_ptr());
     texture.setData(image);
-    qDebug() << texture.format();
     ui->sphereViewer->setTexture(&texture, image);
     ui->openGLWidget->display(image);
 }
 
-void MainWindow::horizontalSliderMovedEvent(int value){
-    //qDebug() << value;
-    ui->sphereViewer->rotatePanorama(value, "y");
-    QVector3D v(1, 0, 0);
+void MainWindow::horizontalSliderMovedEvent(int value)
+{
+    ////qDebug() << value;
+    //ui->sphereViewer->rotatePanorama(value, "y");
+    //QVector3D v(1, 0, 0);
     //rotatePanoramicImage(image, v, 0);
 }
 
-void MainWindow::verticalSliderMovedEvent(int value){
-    //qDebug() << value;
-    ui->sphereViewer->rotatePanorama(value, "x");
+void MainWindow::verticalSliderMovedEvent(int value)
+{
+    ////qDebug() << value;
+    //ui->sphereViewer->rotatePanorama(value, "x");
 }
 
-void MainWindow::verticalSliderReleasedEvent(){
+void MainWindow::verticalSliderReleasedEvent()
+{
     QVector3D v(0, 0, 1);
-    qDebug() << "released";
+    qDebug() << "released V";
     qDebug() << ui->verticalSlider->value();
     float theta = (ui->verticalSlider->value() * 2 * M_PI) / 100.0;
-    //rotatePanoramicImage(image, v, theta);
-    ui->sphereViewer->rotateImageTest();
+    rotatePanoramicImage(image, v, theta);
+    ui->sphereViewer->rotateImage(v, theta);
 }
 
-void MainWindow::horizontalSliderReleasedEvent(){
+void MainWindow::horizontalSliderReleasedEvent()
+{
     QVector3D v(1, 0, 0);
-    qDebug() << "released";
+    qDebug() << "released H";
     qDebug() << ui->horizontalSlider->value();
     float theta = (ui->horizontalSlider->value() * 2 * M_PI) / 100.0;
     rotatePanoramicImage(image, v, theta);
+    ui->sphereViewer->rotateImage(v, theta);
 
 }
 
 QImage MainWindow::loadImage()
 {
-    QString fileName = QFileDialog::getOpenFileName(this,
-        tr("Open File"), "",
-        tr("All Files (*)"));
+    // TODO uncomment this
+    //QString fileName = QFileDialog::getOpenFileName(this,
+    //    tr("Open File"), "",
+    //    tr("All Files (*)"));
 
-    if (fileName.isEmpty()){
-        qDebug() << "Error, image is empty";
-        return QImage();
-    }
-    else {
-        QImage image = QImage(fileName);
-        return image;
-    }
+    //if (fileName.isEmpty()){
+    //    qDebug() << "Error, image is empty";
+    //    return QImage();
+    //}
+    //else {
+    //    QImage image = QImage(fileName);
+    //    return image;
+    //}
+
+  //temp quick loading
+  QImage image = QImage("C:\\Users\\Bugz\\Documents\\panoEditor\\data\\green.jpg");
+  return image;
 }
 
 QMatrix4x4 MainWindow::getRotationMatrixFromV(QVector3D axis, float angle)
