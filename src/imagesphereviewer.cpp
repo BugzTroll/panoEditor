@@ -68,9 +68,11 @@ static const char *computeShader =
     "  #define PI 3.1415926535897932384626433832795\n"
     "  uniform float angle;\n"
     "  uniform highp mat4 rotationMatrix;\n"
+    "  mat4 identity = mat4(vec4(1.0,0.0,0.0,0.0), vec4(0.0,1.0,0.0,0.0), vec4(0.0,0.0,1.0,0.0), vec4(0.0,0.0,0.0,1.0));\n"
     "  layout(local_size_x = 1, local_size_y = 1) in;\n"
     "  layout(rgba32f, binding = 0) uniform image2D img_output;\n"
     "  layout(rgba32f, binding = 1) uniform image2D texture;\n"
+    "  uniform mat4 rotation;\n"
     "  void main() {\n"
     "     ivec2 imgSize = imageSize(texture);\n"
     "     float x = float(gl_GlobalInvocationID.x);\n"
@@ -84,8 +86,8 @@ static const char *computeShader =
     "     float XSphere = cos(lat) * cos(lon);\n"
     "     float YSphere = cos(lat) * sin(lon);\n"
     "     float ZSphere = sin(lat);\n"
-    "     vec4 rotatedPoint = vec4(XSphere, YSphere, ZSphere, 1.0);\n"
-    //"  vec4 rotatedPoint = rotationMatrix * point;\n"
+    "     vec4 point = vec4(XSphere, YSphere, ZSphere, 1.0);\n"
+    "     vec4 rotatedPoint = rotation * point;\n"
     "     float D = sqrt(rotatedPoint.x * rotatedPoint.x + rotatedPoint.y * rotatedPoint.y);\n"
     "     float newLat = atan(rotatedPoint.z, D);\n"
     "     float newLng = atan(rotatedPoint.y, rotatedPoint.x);\n"
@@ -160,15 +162,20 @@ void ImageSphereViewer::rotateImage(QVector3D axis, float angle){
   qDebug() << "Rotating";
 
    QMatrix4x4 rotationMatrix = getRotationMatrixFromV(axis, angle);
-   rotationMatrix.setToIdentity();
+   //rotationMatrix.setToIdentity();
+
+   qDebug() << rotationMatrix;
+
+   m_program_compute.bind();
 
    //bind the variables in the shader
    m_program_compute.setUniformValue(GLint(m_angleUniform), angle);
-   m_program_compute.setUniformValue(GLint(m_rotationMatrixUniform), rotationMatrix);
+   //m_program_compute.setUniformValue(GLint(m_rotationMatrixUniform), rotationMatrix);
+   glUniformMatrix4fv(m_rotationMatrixUniform, 1, false, rotationMatrix.data());
 
    glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
    glBindImageTexture(1, tex_input, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-   m_program_compute.bind();
+   
    glDispatchCompute((GLuint)texture->width(), (GLuint)texture->height(), 1);
    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
@@ -188,7 +195,7 @@ void ImageSphereViewer::initializeGL()
     m_modelMatrixUniform = GLuint(m_program.uniformLocation("modelMatrix"));
 
     m_angleUniform = GLuint(m_program_compute.uniformLocation("angle"));
-    m_rotationMatrixUniform = GLuint(m_program_compute.uniformLocation("rotationMatrix"));
+    m_rotationMatrixUniform = GLuint(m_program_compute.uniformLocation("rotation"));
 
     float aspectRatio = float(this->rect().width())/float(this->rect().height());
 
