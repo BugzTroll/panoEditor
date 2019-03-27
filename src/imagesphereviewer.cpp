@@ -34,77 +34,25 @@ static const char *fragmentShaderProjection =
     "   gl_FragColor = texture2D(texture, sphereCoords);\n"
     "}\n";
 
-//float centeredX = 2 * (x + 0.5) / imageWidth - 1;
-//float centeredY = 2 * (y + 0.5) / imageHeight - 1;
-//
-//float lat = 0.5 * M_PI * centeredY;
-//float lon = M_PI * centeredX;
-//
-//float XSphere = cos(lat) * cos(lon);
-//float YSphere = cos(lat) * sin(lon);
-//float ZSphere = sin(lat);
-//
-//QVector4D point(XSphere, YSphere, ZSphere, 1);
-//QVector4D rotatedPoint = rotationM * point;
-//
-//float D = sqrt(rotatedPoint.x() * rotatedPoint.x() + rotatedPoint.y() * rotatedPoint.y());
-//float newLat = atan2(rotatedPoint.z(), D);
-//float newLng = atan2(rotatedPoint.y(), rotatedPoint.x());
-//
-//float newX = newLng / M_PI;
-//float newY = newLat / (M_PI * 0.5);
-//
-//int imgCoordX = (round(((0.5 * (newX + 1)) * imageWidth) - 0.5));
-//int imgCoordY = round(((0.5 * (newY + 1)) * imageHeight) - 0.5);
-//
-//imgCoordX = qMax(0, imgCoordX);
-//imgCoordY = qMax(0, imgCoordY);
-//
-//imgCoordX = qMin(static_cast<int>(imageWidth), imgCoordX);
-//imgCoordY = qMin(static_cast<int>(imageHeight), imgCoordY);
-
 static const char *computeShader =
     "  #version 430\n "
     "  #define PI 3.1415926535897932384626433832795\n"
     "  uniform float angle;\n"
-    "  uniform highp mat4 rotationMatrix;\n"
-    "  mat4 identity = mat4(vec4(1.0,0.0,0.0,0.0), vec4(0.0,1.0,0.0,0.0), vec4(0.0,0.0,1.0,0.0), vec4(0.0,0.0,0.0,1.0));\n"
     "  layout(local_size_x = 1, local_size_y = 1) in;\n"
     "  layout(rgba32f, binding = 0) uniform image2D img_output;\n"
     "  layout(rgba32f, binding = 1) uniform image2D texture;\n"
     "  uniform mat4 rotation;\n"
     "  void main() {\n"
     "     ivec2 imgSize = imageSize(texture);\n"
-    "     float x = float(gl_GlobalInvocationID.x);\n"
-    "     float y = float(gl_GlobalInvocationID.y);\n"
-    "     float width = float(imgSize.x);\n"
-    "     float height = float(imgSize.y);\n"
-    "     float centeredX = 2.0 * (x + 0.5) / width - 1.0;\n"
-    "     float centeredY = 2.0 * (y + 0.5) / height - 1.0;\n"
-    "     float lat = 0.5 * PI * centeredY;\n" 
-    "     float lon = PI * centeredX;\n"
-    "     float XSphere = cos(lat) * cos(lon);\n"
-    "     float YSphere = cos(lat) * sin(lon);\n"
-    "     float ZSphere = sin(lat);\n"
-    "     vec4 point = vec4(XSphere, YSphere, ZSphere, 1.0);\n"
-    "     vec4 rotatedPoint = rotation * point;\n"
+    "     vec2 centeredPoint = 2.0 * (gl_GlobalInvocationID.xy + vec2(0.5, 0.5)) / imgSize.xy - vec2(1.0, 1.0);\n"
+    "     vec2 lonLat = vec2(PI, 0.5 * PI) * centeredPoint;"
+    "     vec4 rotatedPoint = rotation * vec4(cos(lonLat.y) * cos(lonLat.x), cos(lonLat.y) * sin(lonLat.x), sin(lonLat.y), 1.0);\n"
     "     float D = sqrt(rotatedPoint.x * rotatedPoint.x + rotatedPoint.y * rotatedPoint.y);\n"
-    "     float newLat = atan(rotatedPoint.z, D);\n"
-    "     float newLng = atan(rotatedPoint.y, rotatedPoint.x);\n"
-    "     float newX = newLng / PI;\n"
-    "     float newY = newLat / (PI * 0.5);\n"
-    "     float imgCoordX = round(((0.5 * ( newX + 1.0 )) * width) - 0.5);\n"
-    "     float imgCoordY = round(((0.5 * ( newY + 1.0 )) * height) - 0.5);\n"
-    "     imgCoordX = min(imgSize.x - 1.0, max(0.0, imgCoordX));\n"
-    "     imgCoordY = min(imgSize.y - 1.0, max(0.0, imgCoordY));\n"
-    "     int i_imgCoordX = int(imgCoordX);\n"
-    "     int i_imgCoordY = int(imgCoordY);\n"
-    "     vec4 rotatedColor = imageLoad(texture, ivec2(i_imgCoordX , i_imgCoordY));\n"
-
-    ""
-    "     ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);\n"
-    "     vec4 texColor = imageLoad(texture, pixel_coords);\n"
-    "     imageStore(img_output, pixel_coords, rotatedColor);\n"
+    "     vec2 newCenteredPoint = vec2(atan(rotatedPoint.y, rotatedPoint.x) / PI, atan(rotatedPoint.z, D) / (PI * 0.5));\n "
+    "     vec2 texCoord = round((0.5 * (newCenteredPoint + vec2(1.0, 1.0)) * imgSize.xy) - vec2(0.5, 0.5));\n"
+    "     texCoord = min(imgSize.xy - vec2(1.0, 1.0), max(vec2(0.0, 0.0), texCoord.xy));\n "
+    "     vec4 rotatedColor = imageLoad(texture, ivec2(texCoord));\n"
+    "     imageStore(img_output, ivec2(gl_GlobalInvocationID.xy), rotatedColor);\n"
     "  }\n";
 
 struct floatPixel {
@@ -162,7 +110,6 @@ void ImageSphereViewer::rotateImage(QVector3D axis, float angle){
   qDebug() << "Rotating";
 
    QMatrix4x4 rotationMatrix = getRotationMatrixFromV(axis, angle);
-   //rotationMatrix.setToIdentity();
 
    qDebug() << rotationMatrix;
 
@@ -170,7 +117,6 @@ void ImageSphereViewer::rotateImage(QVector3D axis, float angle){
 
    //bind the variables in the shader
    m_program_compute.setUniformValue(GLint(m_angleUniform), angle);
-   //m_program_compute.setUniformValue(GLint(m_rotationMatrixUniform), rotationMatrix);
    glUniformMatrix4fv(m_rotationMatrixUniform, 1, false, rotationMatrix.data());
 
    glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
@@ -248,14 +194,6 @@ void ImageSphereViewer::paintGL() {
 
 
     if(texture) {
-
-        ////bind the compute shader
-        //glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-        //glBindImageTexture(1, tex_input, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-        //m_program_compute.bind();
-        //int tex_w = 512, tex_h = 512;
-        //glDispatchCompute((GLuint)texture->width(), (GLuint)texture->height(), 1);
-        //glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
         //bind the vertex and fragment shader
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
