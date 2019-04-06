@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
 static const char *vertexShaderSource =
     "attribute highp vec4 posAttr;\n"
     "uniform highp mat4 projectionMatrix;\n"
@@ -107,11 +108,7 @@ QMatrix4x4 ImageSphereViewer::getRotationMatrixFromV(QVector3D axis, float angle
 
 void ImageSphereViewer::rotateImage(QVector3D axis, float angle){
 
-  qDebug() << "Rotating";
-
    QMatrix4x4 rotationMatrix = getRotationMatrixFromV(axis, angle);
-
-   qDebug() << rotationMatrix;
 
    m_program_compute.bind();
 
@@ -124,6 +121,23 @@ void ImageSphereViewer::rotateImage(QVector3D axis, float angle){
    
    glDispatchCompute((GLuint)texture->width(), (GLuint)texture->height(), 1);
    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+   //marie trying stuff
+
+
+   // transfer texture into PBO
+ /*  std::vector<float> pixels;
+   pixels.resize((GLuint)texture->width() * (GLuint)texture->height() * 4);
+   glBindTexture(GL_TEXTURE_2D, tex_output);
+   glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, &pixels[0]);*/
+   //QPixmap qp = QPixmap(pixels);
+
+   float f = 3.0;
+
+   ////marie
+   //char *pixels;
+   //glReadPixels(0, 0, (GLuint)texture->width(), (GLuint)texture->height(), GL_RGBA32F, GL_FLOAT, pixels);
+   //QPixmap qp = QPixmap(pixels);
 }
 
 void ImageSphereViewer::initializeGL()
@@ -186,7 +200,7 @@ void ImageSphereViewer::setTexture(QOpenGLTexture *tex, QImage image)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT,NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, imageData.data());
     glBindImageTexture(0, tex_output, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 }
 

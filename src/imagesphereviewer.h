@@ -9,8 +9,9 @@
 #include <QOpenGLTexture>
 #include <vector>
 #include <QOpenGLExtraFunctions>
+#include <QOpenGLFunctions_4_3_Core>
 
-class ImageSphereViewer : public QOpenGLWidget, protected QOpenGLExtraFunctions
+class ImageSphereViewer : public QOpenGLWidget, protected QOpenGLFunctions_4_3_Core
 {
 public:
     explicit ImageSphereViewer(QWidget *parent);

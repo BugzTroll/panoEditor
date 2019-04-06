@@ -20,12 +20,6 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(ui->loadButton, SIGNAL(clicked()),
                      this, SLOT(loadButtonEvent()));
 
-    QObject::connect(ui->horizontalSlider, SIGNAL(sliderMoved(int)),
-                     this, SLOT(horizontalSliderMovedEvent(int)));
-
-    QObject::connect(ui->verticalSlider, SIGNAL(sliderMoved(int)),
-                     this, SLOT(verticalSliderMovedEvent(int)));
-
     QObject::connect(ui->verticalSlider, SIGNAL(sliderReleased()),
                      this, SLOT(verticalSliderReleasedEvent()));
 
@@ -49,39 +43,20 @@ void MainWindow::loadButtonEvent()
     ui->openGLWidget->display(image);
 }
 
-void MainWindow::horizontalSliderMovedEvent(int value)
-{
-    ////qDebug() << value;
-    //ui->sphereViewer->rotatePanorama(value, "y");
-    //QVector3D v(1, 0, 0);
-    //rotatePanoramicImage(image, v, 0);
-}
-
-void MainWindow::verticalSliderMovedEvent(int value)
-{
-    ////qDebug() << value;
-    //ui->sphereViewer->rotatePanorama(value, "x");
-}
-
 void MainWindow::verticalSliderReleasedEvent()
 {
     QVector3D v(0, 0, 1);
-    qDebug() << "released V";
-    qDebug() << ui->verticalSlider->value();
     float theta = (ui->verticalSlider->value() * 2 * M_PI) / 100.0;
-    rotatePanoramicImage(image, v, theta);
+    //rotatePanoramicImage(image, v, theta);
     ui->sphereViewer->rotateImage(v, theta);
 }
 
 void MainWindow::horizontalSliderReleasedEvent()
 {
     QVector3D v(1, 0, 0);
-    qDebug() << "released H";
-    qDebug() << ui->horizontalSlider->value();
     float theta = (ui->horizontalSlider->value() * 2 * M_PI) / 100.0;
-    rotatePanoramicImage(image, v, theta);
+    //rotatePanoramicImage(image, v, theta);
     ui->sphereViewer->rotateImage(v, theta);
-
 }
 
 QImage MainWindow::loadImage()
