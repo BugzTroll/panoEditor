@@ -57,7 +57,6 @@ private:
     void testShadertestShader(std::vector<GLfloat> points);
 
 public:
-    void rotatePanorama(int value, std::string axis);
     GLuint genComputeProg();
     QImage rotateImage(QVector3D axis, float angle);
     QMatrix4x4 getRotationMatrixFromV(QVector3D axis, float angle);

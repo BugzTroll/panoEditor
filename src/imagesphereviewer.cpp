@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 static const char *vertexShaderSource =
     "attribute highp vec4 posAttr;\n"
     "uniform highp mat4 projectionMatrix;\n"
@@ -238,10 +237,6 @@ void ImageSphereViewer::paintGL() {
     }
 
     update();
-}
-
-void ImageSphereViewer::rotatePanorama(int value, std::string axis){
-    qDebug() << "rotate pliz";
 }
 
 void ImageSphereViewer::mousePressEvent(QMouseEvent* event)

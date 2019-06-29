@@ -28,8 +28,6 @@ public slots:
     void saveButtonEvent();
     void verticalSliderReleasedEvent();
     void horizontalSliderReleasedEvent();
-    QImage rotatePanoramicImage(QImage image, QVector3D axis, float angle);
-    QMatrix4x4 getRotationMatrixFromV(QVector3D axis, float angle);
 
 private:
     Ui::MainWindow *ui;
