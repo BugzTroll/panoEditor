@@ -48,7 +48,8 @@ void MainWindow::verticalSliderReleasedEvent()
     QVector3D v(0, 0, 1);
     float theta = (ui->verticalSlider->value() * 2 * M_PI) / 100.0;
     //rotatePanoramicImage(image, v, theta);
-    ui->sphereViewer->rotateImage(v, theta);
+    QImage rotatedImage = ui->sphereViewer->rotateImage(v, theta);
+    ui->openGLWidget->display(rotatedImage);
 }
 
 void MainWindow::horizontalSliderReleasedEvent()
@@ -56,7 +57,8 @@ void MainWindow::horizontalSliderReleasedEvent()
     QVector3D v(1, 0, 0);
     float theta = (ui->horizontalSlider->value() * 2 * M_PI) / 100.0;
     //rotatePanoramicImage(image, v, theta);
-    ui->sphereViewer->rotateImage(v, theta);
+    QImage rotatedImage = ui->sphereViewer->rotateImage(v, theta);
+    ui->openGLWidget->display(rotatedImage);
 }
 
 QImage MainWindow::loadImage()
@@ -77,6 +79,8 @@ QImage MainWindow::loadImage()
 
   //temp quick loading
   QImage image = QImage("C:\\Users\\Bugz\\Documents\\panoEditor\\data\\green.jpg");
+  qDebug() << "INIT IMAGE FORMAT";
+  qDebug() << image.format();
   return image;
 }
 

@@ -59,7 +59,7 @@ private:
 public:
     void rotatePanorama(int value, std::string axis);
     GLuint genComputeProg();
-    void rotateImage(QVector3D axis, float angle);
+    QImage rotateImage(QVector3D axis, float angle);
     QMatrix4x4 getRotationMatrixFromV(QVector3D axis, float angle);
 };
 

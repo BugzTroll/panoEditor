@@ -106,7 +106,7 @@ QMatrix4x4 ImageSphereViewer::getRotationMatrixFromV(QVector3D axis, float angle
 
 }
 
-void ImageSphereViewer::rotateImage(QVector3D axis, float angle){
+QImage ImageSphereViewer::rotateImage(QVector3D axis, float angle){
 
    QMatrix4x4 rotationMatrix = getRotationMatrixFromV(axis, angle);
 
@@ -123,21 +123,22 @@ void ImageSphereViewer::rotateImage(QVector3D axis, float angle){
    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
    //marie trying stuff
+   std::vector<floatPixel> transformedImage((GLuint)texture->width() * (GLuint)texture->height());
 
-
-   // transfer texture into PBO
- /*  std::vector<float> pixels;
-   pixels.resize((GLuint)texture->width() * (GLuint)texture->height() * 4);
    glBindTexture(GL_TEXTURE_2D, tex_output);
-   glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, &pixels[0]);*/
-   //QPixmap qp = QPixmap(pixels);
+   glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, transformedImage.data());
+   unsigned char* data = (unsigned char*) malloc (texture->width()*texture->height()*4);
 
-   float f = 3.0;
+    for (int i = 0; i < transformedImage.size(); i++){
+       data[i*4] = (unsigned char)(transformedImage[i].b * 255);
+       data[i*4 + 1] = (unsigned char)(transformedImage[i].g * 255);
+       data[i*4 + 2] = (unsigned char)(transformedImage[i].r * 255);
+       data[i*4 + 3] = (unsigned char)(transformedImage[i].a * 255);
+   }
 
-   ////marie
-   //char *pixels;
-   //glReadPixels(0, 0, (GLuint)texture->width(), (GLuint)texture->height(), GL_RGBA32F, GL_FLOAT, pixels);
-   //QPixmap qp = QPixmap(pixels);
+   QImage image(data, texture->width(), texture->height(), QImage::Format_RGB32);
+   return image;
+   //marie trying stuff
 }
 
 void ImageSphereViewer::initializeGL()
