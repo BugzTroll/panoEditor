@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1.0)
 
-project(testproject)
+project(panoramaeditor)
 
 # Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -16,13 +16,13 @@ find_package(Qt5Widgets CONFIG REQUIRED)
 include_directories(src)
 
 # Populate a CMake variable with the sources
-file(GLOB helloworld_SRCS
+file(GLOB panoeditor_SRCS
     "src/*.h"
     "src/*.cpp"
     "src/*.ui"
 )
 
-# Tell CMake to create the helloworld executable
-add_executable(helloworld ${helloworld_SRCS})
+# Tell CMake to create the panoeditor executable
+add_executable(panoeditor ${panoeditor_SRCS})
 # Use the Widgets module from Qt 5
-target_link_libraries(helloworld Qt5::Widgets Qt5::Gui)
+target_link_libraries(panoeditor Qt5::Widgets Qt5::Gui)
