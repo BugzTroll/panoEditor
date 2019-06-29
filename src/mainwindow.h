@@ -25,6 +25,7 @@ public:
     QOpenGLTexture texture;
 public slots:
     void loadButtonEvent();
+    void saveButtonEvent();
     void verticalSliderReleasedEvent();
     void horizontalSliderReleasedEvent();
     QImage rotatePanoramicImage(QImage image, QVector3D axis, float angle);

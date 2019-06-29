@@ -20,6 +20,9 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(ui->loadButton, SIGNAL(clicked()),
                      this, SLOT(loadButtonEvent()));
 
+    QObject::connect(ui->saveButton, SIGNAL(clicked()),
+                     this, SLOT(saveButtonEvent()));
+
     QObject::connect(ui->verticalSlider, SIGNAL(sliderReleased()),
                      this, SLOT(verticalSliderReleasedEvent()));
 
@@ -43,22 +46,42 @@ void MainWindow::loadButtonEvent()
     ui->openGLWidget->display(image);
 }
 
+void MainWindow::saveButtonEvent(){
+
+    QString fileName = QFileDialog::getSaveFileName(this,
+        tr("Save Image"), "",
+        tr("JPEG (*.jpg *.jpeg);;PNG (*.png)"));
+
+    if (fileName.isEmpty())
+        return;
+    else {
+        QFile file(fileName);
+        if (!file.open(QIODevice::WriteOnly)) {
+            QMessageBox::information(this, tr("Unable to open file"),
+                file.errorString());
+            return;
+        }
+
+        image.save(fileName);
+    }
+}
+
 void MainWindow::verticalSliderReleasedEvent()
 {
     QVector3D v(0, 0, 1);
     float theta = (ui->verticalSlider->value() * 2 * M_PI) / 100.0;
-    //rotatePanoramicImage(image, v, theta);
     QImage rotatedImage = ui->sphereViewer->rotateImage(v, theta);
     ui->openGLWidget->display(rotatedImage);
+    image = rotatedImage;
 }
 
 void MainWindow::horizontalSliderReleasedEvent()
 {
     QVector3D v(1, 0, 0);
     float theta = (ui->horizontalSlider->value() * 2 * M_PI) / 100.0;
-    //rotatePanoramicImage(image, v, theta);
     QImage rotatedImage = ui->sphereViewer->rotateImage(v, theta);
     ui->openGLWidget->display(rotatedImage);
+    image = rotatedImage;
 }
 
 QImage MainWindow::loadImage()
@@ -66,7 +89,7 @@ QImage MainWindow::loadImage()
     // TODO uncomment this
     //QString fileName = QFileDialog::getOpenFileName(this,
     //    tr("Open File"), "",
-    //    tr("All Files (*)"));
+    //    tr("JPEG (*.jpg *.jpeg);;PNG (*.png)"));
 
     //if (fileName.isEmpty()){
     //    qDebug() << "Error, image is empty";
@@ -78,7 +101,7 @@ QImage MainWindow::loadImage()
     //}
 
   //temp quick loading
-  QImage image = QImage("C:\\Users\\Bugz\\Documents\\panoEditor\\data\\green.jpg");
+  QImage image = QImage("C:\\Users\\Bugz\\Documents\\panoEditor\\data\\jail.jpg");
   qDebug() << "INIT IMAGE FORMAT";
   qDebug() << image.format();
   return image;

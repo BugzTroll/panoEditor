@@ -122,7 +122,7 @@ QImage ImageSphereViewer::rotateImage(QVector3D axis, float angle){
    glDispatchCompute((GLuint)texture->width(), (GLuint)texture->height(), 1);
    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-   //marie trying stuff
+   //returning the rotated image
    std::vector<floatPixel> transformedImage((GLuint)texture->width() * (GLuint)texture->height());
 
    glBindTexture(GL_TEXTURE_2D, tex_output);
@@ -138,7 +138,6 @@ QImage ImageSphereViewer::rotateImage(QVector3D axis, float angle){
 
    QImage image(data, texture->width(), texture->height(), QImage::Format_RGB32);
    return image;
-   //marie trying stuff
 }
 
 void ImageSphereViewer::initializeGL()
