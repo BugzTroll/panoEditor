@@ -1,0 +1,16 @@
+#define PI 3.1415926535897932384626433832795
+#define PIDIV 1.57
+#define DOUBLEPI 6.28318530717959
+varying highp vec3 pos;
+uniform sampler2D texture;
+
+void main() {
+	float lon = atan(pos.z, pos.x) + PI;
+	float r = length(vec2(pos.x, pos.z));
+	float lat = PI / 2.0 - atan(pos.y, r);
+	float x = 1.0f / DOUBLEPI;
+	float y = 1.0f / PI;
+	vec2 rads = vec2(x, y);
+	vec2 sphereCoords = vec2(lon, lat) * rads;
+	gl_FragColor = texture2D(texture, sphereCoords);
+};
