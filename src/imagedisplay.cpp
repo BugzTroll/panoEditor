@@ -1,6 +1,6 @@
 #include "imagedisplay.h"
-#include<QPainter>
-#include<QDebug>
+#include <QPainter>
+#include <QDebug>
 
 void ImageDisplay::initializeGL()
 {

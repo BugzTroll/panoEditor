@@ -58,11 +58,9 @@ private:
     void wheelEvent(QWheelEvent *event) override;
     void resizeGL (int w, int h) override;
     std::vector<GLfloat> generateCube();
-    void testShader(std::vector<GLfloat> points);
 	bool loadShaders();
 
 public:
-    GLuint genComputeProg();
     QImage rotateImage(QVector3D axis, float angle);
     QMatrix4x4 getRotationMatrixFromV(QVector3D axis, float angle);
 };
