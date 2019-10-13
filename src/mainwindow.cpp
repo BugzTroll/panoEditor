@@ -13,40 +13,41 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    texture(QOpenGLTexture::Target2D)
+    m_texture(QOpenGLTexture::Target2D),
+    m_ui(new Ui::MainWindow)
 {
-    ui->setupUi(this);
-    QObject::connect(ui->loadButton, SIGNAL(clicked()),
+    m_ui->setupUi(this);
+
+    QObject::connect(m_ui->loadButton, SIGNAL(clicked()),
                      this, SLOT(loadButtonEvent()));
 
-    QObject::connect(ui->saveButton, SIGNAL(clicked()),
+    QObject::connect(m_ui->saveButton, SIGNAL(clicked()),
                      this, SLOT(saveButtonEvent()));
 
-    QObject::connect(ui->verticalSlider, SIGNAL(sliderReleased()),
+    QObject::connect(m_ui->verticalSlider, SIGNAL(sliderReleased()),
                      this, SLOT(verticalSliderReleasedEvent()));
 
-    QObject::connect(ui->horizontalSlider, SIGNAL(sliderReleased()),
+    QObject::connect(m_ui->horizontalSlider, SIGNAL(sliderReleased()),
                      this, SLOT(horizontalSliderReleasedEvent()));
 
 }
 
 MainWindow::~MainWindow()
 {
-    ui->sphereViewer->makeCurrent();
-    texture.destroy();
-    delete ui;
+    m_ui->sphereViewer->makeCurrent();
+    m_texture.destroy();
+    delete m_ui;
 }
 
 void MainWindow::loadButtonEvent()
 {
+    m_texture.destroy();
+    m_texture.create();
+    m_image = loadImage();
+    m_texture.setData(m_image);
 
-    texture.destroy();
-    texture.create();
-    image = loadImage();
-    texture.setData(image);
-    ui->sphereViewer->setTexture(&texture, image);
-    ui->openGLWidget->display(image);
+    m_ui->sphereViewer->setTexture(&m_texture, m_image);
+    m_ui->openGLWidget->display(m_image);
 }
 
 void MainWindow::saveButtonEvent(){
@@ -65,28 +66,28 @@ void MainWindow::saveButtonEvent(){
             return;
         }
 
-        image.save(fileName);
+        m_image.save(fileName);
     }
 }
 
 void MainWindow::verticalSliderReleasedEvent()
 {
     QVector3D v(0, 0, 1);
-    float theta = (ui->verticalSlider->value() * M_PI) / 180.0;
-    ui->verticalLabel->setText(QString::number(ui->verticalSlider->value()) + "°");
-    QImage rotatedImage = ui->sphereViewer->rotateImage(v, theta);
-    ui->openGLWidget->display(rotatedImage);
-    image = rotatedImage;
+    float theta = (m_ui->verticalSlider->value() * M_PI) / 180.0;
+    m_ui->verticalLabel->setText(QString::number(m_ui->verticalSlider->value()) + "°");
+    QImage rotatedImage = m_ui->sphereViewer->rotateImage(v, theta);
+    m_ui->openGLWidget->display(rotatedImage);
+    m_image = rotatedImage;
 }
 
 void MainWindow::horizontalSliderReleasedEvent()
 {
     QVector3D v(1, 0, 0);
-    float theta = (ui->horizontalSlider->value() * M_PI) / 180.0;
-    ui->horizontalLabel->setText(QString::number(ui->horizontalSlider->value()) + "°");
-    QImage rotatedImage = ui->sphereViewer->rotateImage(v, theta);
-    ui->openGLWidget->display(rotatedImage);
-    image = rotatedImage;
+    float theta = (m_ui->horizontalSlider->value() * M_PI) / 180.0;
+    m_ui->horizontalLabel->setText(QString::number(m_ui->horizontalSlider->value()) + "°");
+    QImage rotatedImage = m_ui->sphereViewer->rotateImage(v, theta);
+    m_ui->openGLWidget->display(rotatedImage);
+    m_image = rotatedImage;
 }
 
 QImage MainWindow::loadImage()
@@ -106,6 +107,6 @@ QImage MainWindow::loadImage()
 
   //temp quick loading
   //QImage image = QImage("C:\\Users\\Bugz\\Documents\\panoEditor\\data\\jail.jpg");
-  return image;
+  return m_image;
 }
 

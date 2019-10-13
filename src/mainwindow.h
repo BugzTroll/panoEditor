@@ -21,8 +21,8 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     QImage loadImage();
-    QImage image;
-    QOpenGLTexture texture;
+    QImage m_image;
+    QOpenGLTexture m_texture;
 public slots:
     void loadButtonEvent();
     void saveButtonEvent();
@@ -30,7 +30,7 @@ public slots:
     void horizontalSliderReleasedEvent();
 
 private:
-    Ui::MainWindow *ui;
+    Ui::MainWindow *m_ui;
 };
 
 #endif // MAINWINDOW_H

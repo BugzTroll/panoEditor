@@ -15,7 +15,7 @@ void ImageDisplay::paintGL()
 
 void ImageDisplay::display(const QImage& image)
 {
-    this->image = image;
+    this->m_image = image;
     this->update();
 }
 
@@ -30,10 +30,9 @@ QImage ImageDisplay::resizeImageToFit(const QImage& image)
 
 void ImageDisplay::paintEvent(QPaintEvent*)
 {
-    if (!image.isNull()) {
+    if (!m_image.isNull()) {
         QPainter painter(this);
-
-        QImage resizedImage = resizeImageToFit(image);
+        QImage resizedImage = resizeImageToFit(m_image);
 
         //clear color
         painter.fillRect(rect(), Qt::black);

@@ -16,7 +16,7 @@ protected:
     void initializeGL() override;
 private:
     QImage resizeImageToFit(const QImage& image);
-    QImage image;
+    QImage m_image;
 
 };
 

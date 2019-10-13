@@ -20,6 +20,7 @@ file(GLOB panoeditor_SRCS
     "src/*.h"
     "src/*.cpp"
     "src/*.ui"
+    "src/shaders/*"
 )
 
 # Tell CMake to create the panoeditor executable
