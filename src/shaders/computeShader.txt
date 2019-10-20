@@ -1,16 +1,15 @@
 #version 430
 #define PI 3.1415926535897932384626433832795
-uniform float angle;
 layout(local_size_x = 1, local_size_y = 1) in;
 layout(rgba32f, binding = 0) uniform image2D img_output;
 layout(rgba32f, binding = 1) uniform image2D texture;
-uniform mat4 rotation;
+uniform mat4 m_rotation;
 
 void main() {
 	ivec2 imgSize = imageSize(texture);
 	vec2 centeredPoint = 2.0 * (gl_GlobalInvocationID.xy + vec2(0.5, 0.5)) / imgSize.xy - vec2(1.0, 1.0);
 	vec2 lonLat = vec2(PI, 0.5 * PI) * centeredPoint;
-	vec4 rotatedPoint = rotation * vec4(cos(lonLat.y) * cos(lonLat.x), cos(lonLat.y) * sin(lonLat.x), sin(lonLat.y), 1.0);
+	vec4 rotatedPoint = m_rotation * vec4(cos(lonLat.y) * cos(lonLat.x), cos(lonLat.y) * sin(lonLat.x), sin(lonLat.y), 1.0);
 	float D = sqrt(rotatedPoint.x * rotatedPoint.x + rotatedPoint.y * rotatedPoint.y);
 	vec2 newCenteredPoint = vec2(atan(rotatedPoint.y, rotatedPoint.x) / PI, atan(rotatedPoint.z, D) / (PI * 0.5));
 	vec2 texCoord = round((0.5 * (newCenteredPoint + vec2(1.0, 1.0)) * imgSize.xy) - vec2(0.5, 0.5));

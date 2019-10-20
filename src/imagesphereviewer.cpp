@@ -1,5 +1,6 @@
 #include "imagesphereviewer.h"
 #include "math.h"
+#include "utilities.h"
 #include <QVector3D>
 #include <QtDebug>
 #include <stdio.h>
@@ -8,7 +9,6 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <string>
 
 struct floatPixel {
   float r = 1.0;
@@ -16,7 +16,7 @@ struct floatPixel {
   float b = 0.0;
   float a = 1.0;
   floatPixel(float red, float green, float blue, float alpha) : r(red), g(green), b(blue), a(alpha){}
-  floatPixel(){}
+  floatPixel() = default;
 };
 
 ImageSphereViewer::ImageSphereViewer(QWidget *parent) :
@@ -26,34 +26,10 @@ ImageSphereViewer::ImageSphereViewer(QWidget *parent) :
     m_modelMatrix(),
     m_program(this),
     texture(nullptr),
-    m_lastMouseWheelAngle(0){}
+    m_lastMouseWheelAngle(0)
+{}
 
-ImageSphereViewer::~ImageSphereViewer(){
-}
-
-QMatrix4x4 ImageSphereViewer::getRotationMatrixFromV(QVector3D axis, float angle)
-{
-  float a = cos(angle / 2.0);
-  float b = -axis.x() * sin(angle / 2.0);
-  float c = -axis.y() * sin(angle / 2.0);
-  float d = -axis.z() * sin(angle / 2.0);
-  float aa = a * a;
-  float bb = b * b;
-  float cc = c * c;
-  float dd = d * d;
-  float bc = b * c;
-  float ad = a * d;
-  float ac = a * c;
-  float ab = a * b;
-  float bd = b * d;
-  float cd = c * d;
-
-  return QMatrix4x4(float(aa + bb - cc - dd), float(2 * (bc + ad)), float(2 * (bd - ac)), 0,
-                    float(2 * (bc - ad)), float(aa + cc - bb - dd), float(2 * (cd + ab)), 0,
-                    float(2 * (bd + ac)), float(2 * (cd - ab)), float(aa + dd - bb - cc), 0,
-                    0, 0, 0, 1);
-
-}
+ImageSphereViewer::~ImageSphereViewer() = default;
 
 QImage ImageSphereViewer::rotateImage(QVector3D axis, float angle){
 
@@ -62,7 +38,6 @@ QImage ImageSphereViewer::rotateImage(QVector3D axis, float angle){
    m_program_compute.bind();
 
    //bind the variables in the shader
-   m_program_compute.setUniformValue(m_angleUniform, angle);
    glUniformMatrix4fv(m_rotationMatrixUniform, 1, false, rotationMatrix.data());
 
    GLuint width = static_cast<GLuint>(texture->width());
@@ -81,54 +56,40 @@ QImage ImageSphereViewer::rotateImage(QVector3D axis, float angle){
    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, transformedImage.data());
    unsigned char* data = static_cast<unsigned char*> (malloc (width * height * 4));
 
-    for (size_t i = 0; i < transformedImage.size(); i++){
+   for (size_t i = 0; i < transformedImage.size(); i++){
        data[i*4] = static_cast<unsigned char>(transformedImage[i].b * 255);
        data[i*4 + 1] = static_cast<unsigned char>(transformedImage[i].g * 255);
        data[i*4 + 2] = static_cast<unsigned char>(transformedImage[i].r * 255);
        data[i*4 + 3] = static_cast<unsigned char>(transformedImage[i].a * 255);
    }
 
-   QImage image(data, texture->width(), texture->height(), QImage::Format_RGB32);
-   return image;
+   return QImage(data, width, height, QImage::Format_RGB32);
 }
 
 bool ImageSphereViewer::loadShaders(){
 
 	std::ifstream f;
 
-	//fragment shader for projection on cube
-	f.open("C:/Users/Bugz/Documents/panoEditor/src/shaders/fragmentShader.txt");
-	if (f.is_open()) {
-		std::ostringstream ss;
-		ss << f.rdbuf();
-		m_projectionFragmentShader = ss.str();
-		f.close();
-		f.clear();
+	auto fragmentShader = loadFile("../src/shaders/fragmentShader.txt");
+	if (fragmentShader.has_value()) {
+		m_projectionFragmentShader = fragmentShader.value();
 	} else {
 		return false;
 	}
 
-	//vertex shader for cube
-	f.open("C:/Users/Bugz/Documents/panoEditor/src/shaders/vertexShader.txt");
-	if (f.is_open()) {
-		std::ostringstream ss;
-		ss << f.rdbuf();
-		m_vertexShader = ss.str();
-		f.close();
-		f.clear();
-	} else {
+	auto vertexShader = loadFile("../src/shaders/vertexShader.txt");
+	if (vertexShader.has_value()) {
+		m_vertexShader = vertexShader.value();
+	}
+	else {
 		return false;
 	}
 
-	//compute shader for panorama rotation
-	f.open("C:/Users/Bugz/Documents/panoEditor/src/shaders/computeShader.txt");
-	if (f.is_open()) {
-		std::ostringstream ss;
-		ss << f.rdbuf();
-		m_rotationComputeShader = ss.str();
-		f.close();
-		f.clear();
-	} else {
+	auto computeShader = loadFile("../src/shaders/computeShader.txt");
+	if (computeShader.has_value()) {
+		m_rotationComputeShader = computeShader.value();
+	}
+	else {
 		return false;
 	}
 
@@ -146,13 +107,12 @@ void ImageSphereViewer::initializeGL()
 	m_program.link();
 	m_program_compute.link();
 
-	m_posAttr = GLuint(m_program.attributeLocation("posAttr"));
+	m_posAttr = GLuint(m_program.attributeLocation("m_posAttr"));
 	m_projectionMatrixUniform = m_program.uniformLocation("m_projectionMatrix");
 	m_viewMatrixUniform = m_program.uniformLocation("m_viewMatrix");
 	m_modelMatrixUniform = m_program.uniformLocation("m_modelMatrix");
 
-	m_angleUniform = m_program_compute.uniformLocation("angle");
-	m_rotationMatrixUniform = m_program_compute.uniformLocation("rotation");
+	m_rotationMatrixUniform = m_program_compute.uniformLocation("m_rotation");
 
 	float aspectRatio = float(this->rect().width())/float(this->rect().height());
 
@@ -202,10 +162,7 @@ void ImageSphereViewer::setTexture(QOpenGLTexture *tex, QImage image)
 }
 
 void ImageSphereViewer::paintGL() {
-
-
-    if(texture) {
-
+    if (texture != nullptr) {
         //bind the vertex and fragment shader
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, width(), height());
@@ -239,37 +196,37 @@ void ImageSphereViewer::paintGL() {
 
 void ImageSphereViewer::mousePressEvent(QMouseEvent* event)
 {
-    m_initMouseX = float(event->screenPos().x());
-    m_initMouseY = float(event->screenPos().y());
+    m_initMouseX = static_cast<float>(event->screenPos().x());
+    m_initMouseY = static_cast<float>(event->screenPos().y());
 }
 
 void ImageSphereViewer::wheelEvent(QWheelEvent *event){
     float mouseWheelAngle = event->angleDelta().ry();
-    if( mouseWheelAngle >= m_lastMouseWheelAngle ){
+    if (mouseWheelAngle >= m_lastMouseWheelAngle) {
         m_fov = fmax(m_minFov, m_fov - 10);
     } else {
         m_fov = fmin(m_maxFov, m_fov + 10);
     }
 
-    float aspect = float( this->rect().width() )/float(this->rect().height());
+    float aspect = float(this->rect().width()) / float(this->rect().height());
     m_projectionMatrix.setToIdentity();
     m_projectionMatrix.perspective(m_fov, aspect, 0.1f, 100.0f);
 }
 
 void ImageSphereViewer::mouseMoveEvent(QMouseEvent* event)
 {
-    float mouseX = float(event->screenPos().x());
-    float mouseY = float(event->screenPos().y());
+    float mouseX = static_cast<float>(event->screenPos().x());
+    float mouseY = static_cast<float>(event->screenPos().y());
     float diffX = m_initMouseX - mouseX;
     float diffY = m_initMouseY - mouseY;
 
-    float width = float(this->rect().width());
-    float height = float(this->rect().height());
+    float width = static_cast<float>(this->rect().width());
+    float height = static_cast<float>(this->rect().height());
 
     float m_fovV = m_fov / width * height;
 
-    float angleY = diffX/width * m_fov;
-    float angleX = diffY/height * m_fovV;
+    float angleY = diffX / width * m_fov;
+    float angleX = diffY / height * m_fovV;
 
     QVector3D y(0,1,0);
     QVector3D x(1,0,0);
@@ -289,46 +246,45 @@ void ImageSphereViewer::resizeGL(int w, int h)
       m_projectionMatrix.perspective(m_fov, aspect, 0.1f, 100.0f);
 }
 
-std::vector<GLfloat> ImageSphereViewer::generateCube(){
+std::array<float, 108> ImageSphereViewer::generateCube(){
 
-    std::vector<GLfloat> g_vertex_buffer_data = {
-        -1.0f,-1.0f,-1.0f,
-        -1.0f,-1.0f, 1.0f,
-        -1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f,-1.0f,
-        -1.0f,-1.0f,-1.0f,
-        -1.0f, 1.0f,-1.0f,
-        1.0f,-1.0f, 1.0f,
-        -1.0f,-1.0f,-1.0f,
-        1.0f,-1.0f,-1.0f,
-        1.0f, 1.0f,-1.0f,
-        1.0f,-1.0f,-1.0f,
-        -1.0f,-1.0f,-1.0f,
-        -1.0f,-1.0f,-1.0f,
-        -1.0f, 1.0f, 1.0f,
-        -1.0f, 1.0f,-1.0f,
-        1.0f,-1.0f, 1.0f,
-        -1.0f,-1.0f, 1.0f,
-        -1.0f,-1.0f,-1.0f,
-        -1.0f, 1.0f, 1.0f,
-        -1.0f,-1.0f, 1.0f,
-        1.0f,-1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f,
-        1.0f,-1.0f,-1.0f,
-        1.0f, 1.0f,-1.0f,
-        1.0f,-1.0f,-1.0f,
-        1.0f, 1.0f, 1.0f,
-        1.0f,-1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f,-1.0f,
-        -1.0f, 1.0f,-1.0f,
-        1.0f, 1.0f, 1.0f,
-        -1.0f, 1.0f,-1.0f,
-        -1.0f, 1.0f, 1.0f,
-        1.0f, 1.0f, 1.0f,
-        -1.0f, 1.0f, 1.0f,
-        1.0f,-1.0f, 1.0f
-    };
-
-     return g_vertex_buffer_data;
+	std::array<float, 108> cubeVertex {
+		-1.0f,-1.0f,-1.0f,
+		-1.0f,-1.0f, 1.0f,
+		-1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f,-1.0f,
+		-1.0f,-1.0f,-1.0f,
+		-1.0f, 1.0f,-1.0f,
+		1.0f,-1.0f, 1.0f,
+		-1.0f,-1.0f,-1.0f,
+		1.0f,-1.0f,-1.0f,
+		1.0f, 1.0f,-1.0f,
+		1.0f,-1.0f,-1.0f,
+		-1.0f,-1.0f,-1.0f,
+		-1.0f,-1.0f,-1.0f,
+		-1.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f,-1.0f,
+		1.0f,-1.0f, 1.0f,
+		-1.0f,-1.0f, 1.0f,
+		-1.0f,-1.0f,-1.0f,
+		-1.0f, 1.0f, 1.0f,
+		-1.0f,-1.0f, 1.0f,
+		1.0f,-1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+		1.0f,-1.0f,-1.0f,
+		1.0f, 1.0f,-1.0f,
+		1.0f,-1.0f,-1.0f,
+		1.0f, 1.0f, 1.0f,
+		1.0f,-1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f,-1.0f,
+		-1.0f, 1.0f,-1.0f,
+		1.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f,-1.0f,
+		-1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f,
+		-1.0f, 1.0f, 1.0f,
+		1.0f,-1.0f, 1.0f
+		};
+	return cubeVertex;
 }

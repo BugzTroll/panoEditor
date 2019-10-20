@@ -1,11 +1,11 @@
-attribute highp vec4 posAttr;
+attribute highp vec4 m_posAttr;
 uniform highp mat4 m_projectionMatrix;
 uniform highp mat4 m_modelMatrix;
 uniform highp mat4 m_viewMatrix;
 varying highp vec3 pos;
 
 void main() {
-  vec3 pos3 = posAttr.xyz;
+  vec3 pos3 = m_posAttr.xyz;
   pos = pos3;
-  gl_Position = m_projectionMatrix * m_viewMatrix * m_modelMatrix * posAttr;
+  gl_Position = m_projectionMatrix * m_viewMatrix * m_modelMatrix * m_posAttr;
 };

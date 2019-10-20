@@ -4,13 +4,12 @@
 #include <QDebug>
 #include <QSignalMapper>
 #include <QMessageBox>
-#include <QDebug>
 #include <QFileDialog>
 #include "imagedisplay.h"
 #include "ui_mainwindow.h"
 #include <QtGlobal>
 
-MainWindow::MainWindow(QWidget *parent) :
+MainWindow::MainWindow(QWidget* parent) :
     QMainWindow(parent),
     m_texture(QOpenGLTexture::Target2D),
     m_ui(new Ui::MainWindow)
@@ -28,7 +27,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QObject::connect(m_ui->horizontalSlider, SIGNAL(sliderReleased()),
                      this, SLOT(horizontalSliderReleasedEvent()));
-
 }
 
 MainWindow::~MainWindow()
@@ -43,17 +41,21 @@ void MainWindow::loadButtonEvent()
     m_texture.destroy();
     m_texture.create();
     m_image = loadImage();
-    m_texture.setData(m_image);
+	if(!m_image.isNull()){
+		m_texture.setData(m_image);
 
-    m_ui->sphereViewer->setTexture(&m_texture, m_image);
-    m_ui->openGLWidget->display(m_image);
+		m_ui->sphereViewer->setTexture(&m_texture, m_image);
+		m_ui->openGLWidget->display(m_image);
+	}
 }
 
 void MainWindow::saveButtonEvent(){
 
-    QString fileName = QFileDialog::getSaveFileName(this,
+    QString fileName = QFileDialog::getSaveFileName(
+		this,
         tr("Save Image"), "",
-        tr("JPEG (*.jpg *.jpeg);;PNG (*.png)"));
+        tr("JPEG (*.jpg *.jpeg);;PNG (*.png)")
+	);
 
     if (fileName.isEmpty())
         return;
@@ -71,41 +73,43 @@ void MainWindow::saveButtonEvent(){
 
 void MainWindow::verticalSliderReleasedEvent()
 {
+	m_ui->verticalLabel->setText(QString::number(m_ui->verticalSlider->value()) + "°");
     QVector3D v(0, 0, 1);
-    float theta = (m_ui->verticalSlider->value() * M_PI) / 180.0;
-    m_ui->verticalLabel->setText(QString::number(m_ui->verticalSlider->value()) + "°");
-    QImage rotatedImage = m_ui->sphereViewer->rotateImage(v, theta);
-    m_ui->openGLWidget->display(rotatedImage);
-    m_image = rotatedImage;
+	rotateImage(m_ui->verticalSlider, v);
 }
 
 void MainWindow::horizontalSliderReleasedEvent()
 {
-    QVector3D v(1, 0, 0);
-    float theta = (m_ui->horizontalSlider->value() * M_PI) / 180.0;
-    m_ui->horizontalLabel->setText(QString::number(m_ui->horizontalSlider->value()) + "°");
-    QImage rotatedImage = m_ui->sphereViewer->rotateImage(v, theta);
-    m_ui->openGLWidget->display(rotatedImage);
-    m_image = rotatedImage;
+	m_ui->horizontalLabel->setText(QString::number(m_ui->horizontalSlider->value()) + "°");
+	QVector3D v(1, 0, 0);
+	rotateImage(m_ui->horizontalSlider, v);
+}
+
+void MainWindow::rotateImage(QSlider *slider, const QVector3D &vector){
+	float theta = (slider->value() * M_PI) / 180.0;
+	QImage rotatedImage = m_ui->sphereViewer->rotateImage(vector, theta);
+	m_ui->openGLWidget->display(rotatedImage);
+	m_image = rotatedImage;
 }
 
 QImage MainWindow::loadImage()
 {
-    QString fileName = QFileDialog::getOpenFileName(this,
+    QString fileName = QFileDialog::getOpenFileName(
+		this,
         tr("Open File"), "",
-        tr("JPEG (*.jpg *.jpeg);;PNG (*.png)"));
+        tr("JPEG (*.jpg *.jpeg);;PNG (*.png)")
+	);
 
     if (fileName.isEmpty()){
         qDebug() << "Error, image is empty";
         return QImage();
-    }
-    else {
-        QImage image = QImage(fileName);
-        return image;
+    } else {
+        return QImage(fileName);
     }
 
   //temp quick loading
   //QImage image = QImage("C:\\Users\\Bugz\\Documents\\panoEditor\\data\\jail.jpg");
+
   return m_image;
 }
 

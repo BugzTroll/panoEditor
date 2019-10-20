@@ -4,7 +4,7 @@
 
 void ImageDisplay::initializeGL()
 {
-    QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
+    QOpenGLFunctions* f = QOpenGLContext::currentContext()->functions();
     f->glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 }
 void ImageDisplay::paintGL()
@@ -23,12 +23,10 @@ QImage ImageDisplay::resizeImageToFit(const QImage& image)
 {
     int viewerWidth = this->rect().width();
     int viewerHeight = this->rect().height();
-
-    QImage scaledImage = image.scaled(viewerWidth, viewerHeight,Qt::KeepAspectRatio);
-    return scaledImage;
+    return image.scaled(viewerWidth, viewerHeight, Qt::KeepAspectRatio);
 }
 
-void ImageDisplay::paintEvent(QPaintEvent*)
+void ImageDisplay::paintEvent(QPaintEvent* /*event*/)
 {
     if (!m_image.isNull()) {
         QPainter painter(this);
@@ -42,6 +40,6 @@ void ImageDisplay::paintEvent(QPaintEvent*)
         QRect devRect(0, 0, painter.device()->width(), painter.device()->height());
         imgRect.moveCenter(devRect.center());
 
-        painter.drawImage(imgRect.topLeft(),resizedImage);
+        painter.drawImage(imgRect.topLeft(), resizedImage);
     }
 }

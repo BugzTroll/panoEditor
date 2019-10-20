@@ -10,6 +10,7 @@
 #include <vector>
 #include <QOpenGLExtraFunctions>
 #include <QOpenGLFunctions_4_3_Core>
+#include <array>
 
 class ImageSphereViewer : public QOpenGLWidget, protected QOpenGLFunctions_4_3_Core
 {
@@ -26,7 +27,6 @@ private:
     GLint m_viewMatrixUniform;
     GLint m_modelMatrixUniform;
     GLint m_frameUniform;
-    GLint m_angleUniform;
     GLint m_rotationMatrixUniform;
 
     GLuint m_posAttr;
@@ -41,7 +41,7 @@ private:
     QOpenGLShaderProgram m_program_compute;
     int m_frame;
     QOpenGLTexture *texture;
-    std::vector<GLfloat> cubeData;
+	std::array<float, 108> cubeData;
     float m_fov;
     float const m_maxFov = 130;
     float const m_minFov = 30;
@@ -57,12 +57,11 @@ private:
     void mouseMoveEvent (QMouseEvent* event) override;
     void wheelEvent(QWheelEvent *event) override;
     void resizeGL (int w, int h) override;
-    std::vector<GLfloat> generateCube();
+    std::array<float, 108> generateCube();
 	bool loadShaders();
 
 public:
     QImage rotateImage(QVector3D axis, float angle);
-    QMatrix4x4 getRotationMatrixFromV(QVector3D axis, float angle);
 };
 
 #endif // IMAGESPHEREVIEWER_H

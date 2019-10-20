@@ -12,12 +12,14 @@ public:
     void paintEvent(QPaintEvent*) override;
     void display(const QImage& img);
     void paintGL() override;
+
 protected:
     void initializeGL() override;
+
 private:
     QImage resizeImageToFit(const QImage& image);
-    QImage m_image;
 
+    QImage m_image;
 };
 
 #endif // IMAGEDISPLAY_H
